@@ -1,6 +1,6 @@
 /*
  * This source file is part of the bstring string library.  This code was
- * written by Paul Hsieh in 2002-2006, and is covered by the BSD open source 
+ * written by Paul Hsieh in 2002-2007, and is covered by the BSD open source 
  * license. Refer to the accompanying documentation for details on usage and 
  * license.
  */
@@ -587,10 +587,10 @@ int i, len;
  *
  *  Compare two strings without differentiating between case.  The return 
  *  value is the difference of the values of the characters where the two 
- *  strings first differ, otherwise 0 is returned indicating that the strings 
- *  are equal.  If the lengths are different, then a difference from 0 is
- *  given, but if the first extra character is '\0', then it is taken to be
- *  the value UCHAR_MAX+1.
+ *  strings first differ after lower case transformation, otherwise 0 is 
+ *  returned indicating that the strings are equal.  If the lengths are 
+ *  different, then a difference from 0 is given, but if the first extra 
+ *  character is '\0', then it is taken to be the value UCHAR_MAX+1.
  */
 int bstricmp (const_bstring b0, const_bstring b1) {
 int i, v, n;
@@ -601,9 +601,9 @@ int i, v, n;
 	else if (b0->slen == b1->slen && b0->data == b1->data) return BSTR_OK;
 
 	for (i = 0; i < n; i ++) {
-		v  = (char) downcase (b0->data[i]);
-		v -= (char) downcase (b1->data[i]);
-		if (v != 0) return b0->data[i] - b1->data[i];
+		v  = (char) downcase (b0->data[i])
+		   - (char) downcase (b1->data[i]);
+		if (0 != v) return v;
 	}
 
 	if (b0->slen > n) {
@@ -1270,48 +1270,38 @@ int i;
 #define LONG_BITS_QTY (1 << LONG_LOG_BITS_QTY)
 #define LONG_TYPE unsigned char
 
-struct charField { LONG_TYPE content[(1 << CHAR_BIT) / LONG_BITS_QTY]; };
+#define CFCLEN ((1 << CHAR_BIT) / LONG_BITS_QTY)
+struct charField { LONG_TYPE content[CFCLEN]; };
 #define testInCharField(cf,c) ((cf)->content[(c) >> LONG_LOG_BITS_QTY] & (((long)1) << ((c) & (LONG_BITS_QTY-1))))
+#define setInCharField(cf,idx) { \
+	unsigned int c = (unsigned int) (idx); \
+	(cf)->content[c >> LONG_LOG_BITS_QTY] |= (LONG_TYPE) (1ul << (c & (LONG_BITS_QTY-1))); \
+}
+
+#else
+
+#define CFCLEN (1 << CHAR_BIT)
+struct charField { unsigned char content[CFCLEN]; };
+#define testInCharField(cf,c) ((cf)->content[(unsigned char) (c)])
+#define setInCharField(cf,idx) (cf)->content[(unsigned int) (idx)] = ~0
+
+#endif
 
 /* Convert a bstring to charField */
-static int buildCharField (struct charField * cf, const_bstring b1) {
+static int buildCharField (struct charField * cf, const_bstring b) {
 int i;
-	if (b1 == NULL || b1->data == NULL || b1->slen <= 0) return BSTR_ERR;
+	if (b == NULL || b->data == NULL || b->slen <= 0) return BSTR_ERR;
 	memset ((void *) cf->content, 0, sizeof (struct charField));
-	for (i=0; i < b1->slen; i++) {
-		unsigned int c = (unsigned int) b1->data[i];
-		cf->content[c >> LONG_LOG_BITS_QTY] |= (LONG_TYPE) (1ul << (c & (LONG_BITS_QTY-1)));
+	for (i=0; i < b->slen; i++) {
+		setInCharField (cf, b->data[i]);
 	}
 	return BSTR_OK;
 }
 
 static void invertCharField (struct charField * cf) {
 int i;
-	for (i=0; i < ((1 << CHAR_BIT) / LONG_BITS_QTY); i++) cf->content[i] = (unsigned char) ~cf->content[i];
+	for (i=0; i < CFCLEN; i++) cf->content[i] = ~cf->content[i];
 }
-#else
-
-struct charField { unsigned char content[(1 << CHAR_BIT)]; };
-#define testInCharField(cf,c) ((cf)->content[(unsigned char) (c)])
-
-/* Convert a bstring to charField */
-static int buildCharField (struct charField * cf, const_bstring b1) {
-int i, c;
-	if (b1 == NULL || b1->data == NULL || b1->slen <= 0) return BSTR_ERR;
-	memset ((void *) cf->content, 0, sizeof (struct charField));
-	for (c=i=0; i < b1->slen; i++) {
-		c += 0 == cf->content[(unsigned int) b1->data[i]];
-		cf->content[(unsigned int) b1->data[i]] = 1;
-	}
-	return c;
-}
-
-static void invertCharField (struct charField * cf) {
-int i;
-	for (i=0; i < (1 << CHAR_BIT); i++) cf->content[i] ^= 1;
-}
-
-#endif
 
 /* Inner engine for binchr */
 static int binchrCF (const unsigned char * data, int len, int pos, const struct charField * cf) {
@@ -2263,7 +2253,7 @@ int i, c, v;
 	if (sep != NULL) c += (bl->qty - 1) * sep->slen;
 
 	b = (bstring) bstr__alloc (sizeof (struct tagbstring));
-	if (b == NULL) return NULL; /* Out of memory */
+	if (NULL == b) return NULL; /* Out of memory */
 	b->data = (unsigned char *) bstr__alloc (c);
 	if (b->data == NULL) {
 		bstr__free (b);
@@ -2416,9 +2406,28 @@ int i, p, ret;
 	return ret;
 }
 
+/*  int bstrListCreate (void)
+ *
+ *  Create a bstrList.
+ */
+struct bstrList * bstrListCreate (void) {
+struct bstrList * sl = (struct bstrList *) bstr__alloc (sizeof (struct bstrList));
+	if (sl) {
+		sl->entry = (bstring *) bstr__alloc (1*sizeof (bstring));
+		if (!sl->entry) {
+			bstr__free (sl);
+			sl = NULL;
+		} else {
+			sl->qty = 0;
+			sl->mlen = 1;
+		}
+	}
+	return sl;
+}
+
 /*  int bstrListDestroy (struct bstrList * sl)
  *
- *  Destroy a bstrList that has been created by bsplit or bsplits.
+ *  Destroy a bstrList that has been created by bsplit, bsplits or bstrListCreate.
  */
 int bstrListDestroy (struct bstrList * sl) {
 int i;
@@ -2429,8 +2438,57 @@ int i;
 			sl->entry[i] = NULL;
 		}
 	}
-	sl->qty = -1;
+	sl->qty  = -1;
+	sl->mlen = -1;
+	bstr__free (sl->entry);
+	sl->entry = NULL;
 	bstr__free (sl);
+	return BSTR_OK;
+}
+
+/*  int bstrListAlloc (struct bstrList * sl, int msz)
+ *
+ *  Ensure that there is memory for at least msz number of entries for the
+ *  list.
+ */
+int bstrListAlloc (struct bstrList * sl, int msz) {
+bstring * l;
+int smsz;
+size_t nsz;
+	if (!sl || msz <= 0 || !sl->entry || sl->qty < 0 || sl->mlen <= 0 || sl->qty > sl->mlen) return BSTR_ERR;
+	if (sl->mlen >= msz) return BSTR_OK;
+	smsz = snapUpSize (msz);
+	nsz = ((size_t) smsz) * sizeof (bstring);
+	if (nsz < (size_t) smsz) return BSTR_ERR;
+	l = bstr__realloc (sl->entry, nsz);
+	if (!l) {
+		smsz = msz;
+		nsz = ((size_t) smsz) * sizeof (bstring);
+		l = bstr__realloc (sl->entry, nsz);
+		if (!l) return BSTR_ERR;
+	}
+	sl->mlen = smsz;
+	sl->entry = l;
+	return BSTR_OK;
+}
+
+/*  int bstrListAllocMin (struct bstrList * sl, int msz)
+ *
+ *  Try to allocate the minimum amount of memory for the list to include at
+ *  least msz entries or sl->qty whichever is greater.
+ */
+int bstrListAllocMin (struct bstrList * sl, int msz) {
+bstring * l;
+size_t nsz;
+	if (!sl || msz <= 0 || !sl->entry || sl->qty < 0 || sl->mlen <= 0 || sl->qty > sl->mlen) return BSTR_ERR;
+	if (msz < sl->qty) msz = sl->qty;
+	if (sl->mlen == msz) return BSTR_OK;
+	nsz = ((size_t) msz) * sizeof (bstring);
+	if (nsz < (size_t) msz) return BSTR_ERR;
+	l = bstr__realloc (sl->entry, nsz);
+	if (!l) return BSTR_ERR;
+	sl->mlen = msz;
+	sl->entry = l;
 	return BSTR_OK;
 }
 
@@ -2555,29 +2613,27 @@ int i, p, ret;
 	return BSTR_OK;
 }
 
-#ifdef offsetof
-#define BLE_SZ (offsetof (struct bstrList, entry))
-#else
-#define BLE_SZ (sizeof (struct bstrList))
-#endif
-
 struct genBstrList {
 	bstring b;
 	struct bstrList * bl;
-	int mlen;
 };
 
 static int bscb (void * parm, int ofs, int len) {
-struct genBstrList * g = (struct genBstrList *)parm;
-	if (g->bl->qty >= g->mlen) {
-		int mlen = g->mlen * 2;
-		struct bstrList * tbl;
+struct genBstrList * g = (struct genBstrList *) parm;
+	if (g->bl->qty >= g->bl->mlen) {
+		int mlen = g->bl->mlen * 2;
+		bstring * tbl;
 
-		while (g->bl->qty >= mlen) mlen += mlen;
-		tbl = (struct bstrList *) bstr__realloc (g->bl, BLE_SZ + sizeof (bstring) * mlen);
+		while (g->bl->qty >= mlen) {
+			if (mlen < g->bl->mlen) return BSTR_ERR;
+			mlen += mlen;
+		}
+
+		tbl = (bstring *) bstr__realloc (g->bl->entry, sizeof (bstring) * mlen);
 		if (tbl == NULL) return BSTR_ERR;
-		g->bl = tbl;
-		g->mlen = mlen;
+
+		g->bl->entry = tbl;
+		g->bl->mlen = mlen;
 	}
 
 	g->bl->entry[g->bl->qty] = bmidstr (g->b, ofs, len);
@@ -2595,9 +2651,15 @@ struct genBstrList g;
 
 	if (str == NULL || str->data == NULL || str->slen < 0) return NULL;
 
-	g.mlen = 4;
-	g.bl = (struct bstrList *) bstr__alloc (BLE_SZ + sizeof (bstring) * g.mlen);
+	g.bl = (struct bstrList *) bstr__alloc (sizeof (struct bstrList));
 	if (g.bl == NULL) return NULL;
+	g.bl->mlen = 4;
+	g.bl->entry = (bstring *) bstr__alloc (g.bl->mlen * sizeof (bstring));
+	if (NULL == g.bl->entry) {
+		bstr__free (g.bl);
+		return NULL;
+	}
+
 	g.b = (bstring) str;
 	g.bl->qty = 0;
 	if (bsplitcb (str, splitChar, 0, bscb, &g) < 0) {
@@ -2617,9 +2679,15 @@ struct genBstrList g;
 
 	if (str == NULL || str->data == NULL || str->slen < 0) return NULL;
 
-	g.mlen = 4;
-	g.bl = (struct bstrList *) bstr__alloc (BLE_SZ + sizeof (bstring) * g.mlen);
+	g.bl = (struct bstrList *) bstr__alloc (sizeof (struct bstrList));
 	if (g.bl == NULL) return NULL;
+	g.bl->mlen = 4;
+	g.bl->entry = (bstring *) bstr__alloc (g.bl->mlen * sizeof (bstring));
+	if (NULL == g.bl->entry) {
+		bstr__free (g.bl);
+		return NULL;
+	}
+
 	g.b = (bstring) str;
 	g.bl->qty = 0;
 	if (bsplitstrcb (str, splitStr, 0, bscb, &g) < 0) {
@@ -2642,11 +2710,17 @@ struct genBstrList g;
 	    splitStr == NULL || splitStr->slen < 0 || splitStr->data == NULL)
 		return NULL;
 
-	g.mlen = 4;
-	g.bl = (struct bstrList *) bstr__alloc (BLE_SZ + sizeof (bstring) * g.mlen);
+	g.bl = (struct bstrList *) bstr__alloc (sizeof (struct bstrList));
 	if (g.bl == NULL) return NULL;
+	g.bl->mlen = 4;
+	g.bl->entry = (bstring *) bstr__alloc (g.bl->mlen * sizeof (bstring));
+	if (NULL == g.bl->entry) {
+		bstr__free (g.bl);
+		return NULL;
+	}
 	g.b = (bstring) str;
 	g.bl->qty = 0;
+
 	if (bsplitscb (str, splitStr, 0, bscb, &g) < 0) {
 		bstrListDestroy (g.bl);
 		return NULL;
@@ -2834,6 +2908,57 @@ int n, r;
 	}
 
 	return buff;
+}
+
+/*  int bvcformata (bstring b, int count, const char * fmt, va_list arglist)
+ *
+ *  The bvcformata function formats data under control of the format control 
+ *  string fmt and attempts to append the result to b.  The fmt parameter is 
+ *  the same as that of the printf function.  The variable argument list is 
+ *  replaced with arglist, which has been initialized by the va_start macro.
+ *  The size of the output is upper bounded by count.  If the required output
+ *  exceeds count, the string b is not augmented with any contents and a value
+ *  below BSTR_ERR is returned.  If a value below -count is returned then it
+ *  is recommended that the negative of this value be used as an update to the
+ *  count in a subsequent pass.  On other errors, such as running out of 
+ *  memory, parameter errors or numeric wrap around BSTR_ERR is returned.  
+ *  BSTR_OK is returned when the output is successfully generated and 
+ *  appended to b.
+ *
+ *  Note: There is no sanity checking of arglist, and this function is
+ *  destructive of the contents of b from the b->slen point onward.  If there 
+ *  is an early generation of a '\0' character, the bstring will be truncated 
+ *  to this end point.
+ */
+int bvcformata (bstring b, int count, const char * fmt, va_list arg) {
+int n, r, l;
+
+	if (b == NULL || fmt == NULL || count <= 0 || b->data == NULL
+	 || b->mlen <= 0 || b->slen < 0 || b->slen > b->mlen) return BSTR_ERR;
+
+	if (count > (n = b->slen + count) + 2) return BSTR_ERR;
+	if (BSTR_OK != balloc (b, n + 2)) return BSTR_ERR;
+
+	exvsnprintf (r, (char *) b->data + b->slen, count + 2, fmt, arg);
+
+	/* Did the operation complete successfully within bounds? */
+
+	if (n >= (l = b->slen + (int) (strlen) ((const char *) b->data + b->slen))) {
+		b->slen = l;
+		return BSTR_OK;
+	}
+
+	/* Abort, since the buffer was not large enough.  The return value 
+	   tries to help set what the retry length should be. */
+
+	b->data[b->slen] = '\0';
+	if (r > count+1) l = r; else {
+		l = count+count;
+		if (count > l) l = INT_MAX;
+	}
+	n = -l;
+	if (n > BSTR_ERR-1) n = BSTR_ERR-1;
+	return n;
 }
 
 #endif

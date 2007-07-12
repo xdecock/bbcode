@@ -1,8 +1,22 @@
 /*
- * This source file is part bbcode PHP extension.
- * Written and maintained by Xavier De Cock 2006-2007
- * Licensed under the PHP License Terms
- */
+  +----------------------------------------------------------------------+
+  | PHP Version 5                                                        |
+  +----------------------------------------------------------------------+
+  | Copyright (c) 1997-2007 The PHP Group                                |
+  +----------------------------------------------------------------------+
+  | This source file is subject to version 3.01 of the PHP license,      |
+  | that is bundled with this package in the file LICENSE, and is        |
+  | available through the world-wide-web at the following url:           |
+  | http://www.php.net/license/3_01.txt                                  |
+  | If you did not receive a copy of the PHP license and are unable to   |
+  | obtain it through the world-wide-web, please send a note to          |
+  | license@php.net so we can mail you a copy immediately.               |
+  +----------------------------------------------------------------------+
+  | Author: Xavier De Cock <void@php.net>                                |
+  +----------------------------------------------------------------------+
+
+  $Id$ 
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -59,6 +73,7 @@ zend_module_entry bbcode_module_entry = {
 ZEND_GET_MODULE(bbcode)
 #endif
 
+/* {{{ _php_bbcode_handling_content */
 /* Start user functions callback */
 static int _php_bbcode_handling_content(bstring content, bstring param, bstring user_func){
 	zval *retval = NULL;
@@ -112,6 +127,8 @@ static int _php_bbcode_handling_content(bstring content, bstring param, bstring 
 	}
 	return 0;
 }
+/* }}} */
+/* {{{ _php_bbcode_handling_param */
 static int _php_bbcode_handling_param(bstring content, bstring param, bstring user_func){
 	zval *retval = NULL;
 	zval ***zargs = NULL;
@@ -165,6 +182,8 @@ static int _php_bbcode_handling_param(bstring content, bstring param, bstring us
 	return 0;
 }
 /* End User function Callback */
+/* }}} */
+/* {{{ _php_bbcode_add_element */
 /* Fill a bbcode_container */
 static void _php_bbcode_add_element(bbcode_container *container, char *tag_name, zval *content){
 	zval **e;
@@ -263,7 +282,7 @@ static void _php_bbcode_add_element(bbcode_container *container, char *tag_name,
 	}
 	bbcode_add_element(tag_name, type, flags, open_tag, close_tag, default_arg, content_handling, param_handling, childs, parents, content_handling_func, param_handling_func, container);
 }
-/* End bbcode_container Fill */
+/* }}} */
 /* Destructors */
 ZEND_RSRC_DTOR_FUNC(php_bbcode_dtor)
 {
@@ -285,11 +304,6 @@ PHP_MINIT_FUNCTION(bbcode)
 	REGISTER_LONG_CONSTANT("BBCODE_TYPE_ROOT",	BBCODE_TYPE_ROOT, CONST_CS|CONST_PERSISTENT);
 	REGISTER_LONG_CONSTANT("BBCODE_FLAGS_ARG_PARSING",	BBCODE_FLAGS_ARG_PARSING, CONST_CS|CONST_PERSISTENT);
 	REGISTER_LONG_CONSTANT("BBCODE_FLAGS_CDATA_NOT_ALLOWED",	BBCODE_FLAGS_CDATA_NOT_ALLOWED, CONST_CS|CONST_PERSISTENT);
-/*	REGISTER_LONG_CONSTANT("BBCODE_CALLBACK_CONTENT_VOID",	0, CONST_CS|CONST_PERSISTENT);
-	REGISTER_LONG_CONSTANT("BBCODE_CALLBACK_PARAM_VOID",		1, CONST_CS|CONST_PERSISTENT);
-	REGISTER_LONG_CONSTANT("BBCODE_CALLBACK_PARAM_INT",			2, CONST_CS|CONST_PERSISTENT);
-	REGISTER_LONG_CONSTANT("BBCODE_CALLBACK_CONTENT_INT",		3, CONST_CS|CONST_PERSISTENT);
-*/
     return SUCCESS;
 }
 /* END INIT/SHUTDOWN */
@@ -485,6 +499,7 @@ PHP_MINFO_FUNCTION(bbcode)
 	bdestroy(tmp);
 	tmp=bformat("%d",BBCODE_MAX_CODES);
 	php_info_print_table_row(2, "BBCode Max Elements", tmp->data);
+	php_info_print_table_row(1, "This extension makes use of Bstrlib available at http://bstrlib.sf.net");
 	bdestroy(tmp);
 /*	php_info_print_table_header(2, "Builtins Callback", "Associated Constant");
 	php_info_print_table_row(2, "php_bbcode_void_content", 	"BBCODE_CALLBACK_CONTENT_VOID");
