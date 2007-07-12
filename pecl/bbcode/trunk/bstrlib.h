@@ -1,6 +1,6 @@
 /*
  * This source file is part of the bstring string library.  This code was
- * written by Paul Hsieh in 2002-2006, and is covered by the BSD open source 
+ * written by Paul Hsieh in 2002-2007, and is covered by the BSD open source 
  * license. Refer to the accompanying documentation for details on usage and 
  * license.
  */
@@ -97,17 +97,21 @@ extern int bninchrr (const_bstring b0, int pos, const_bstring b1);
 extern int bfindreplace (bstring b, const_bstring find, const_bstring repl, int pos);
 extern int bfindreplacecaseless (bstring b, const_bstring find, const_bstring repl, int pos);
 
+/* List of string container functions */
 struct bstrList {
-    int qty;
-    bstring entry[1];
+    int qty, mlen;
+    bstring * entry;
 };
+extern struct bstrList * bstrListCreate (void);
+extern int bstrListDestroy (struct bstrList * sl);
+extern int bstrListAlloc (struct bstrList * sl, int msz);
+extern int bstrListAllocMin (struct bstrList * sl, int msz);
 
 /* String split and join functions */
 extern struct bstrList * bsplit (const_bstring str, unsigned char splitChar);
 extern struct bstrList * bsplits (const_bstring str, const_bstring splitStr);
 extern struct bstrList * bsplitstr (const_bstring str, const_bstring splitStr);
 extern bstring bjoin (const struct bstrList * bl, const_bstring sep);
-extern int bstrListDestroy (struct bstrList * sl);
 extern int bsplitcb (const_bstring str, unsigned char splitChar, int pos,
 	int (* cb) (void * parm, int ofs, int len), void * parm);
 extern int bsplitscb (const_bstring str, const_bstring splitStr, int pos,
@@ -127,6 +131,29 @@ extern int btrimws (bstring b);
 extern bstring bformat (const char * fmt, ...);
 extern int bformata (bstring b, const char * fmt, ...);
 extern int bassignformat (bstring b, const char * fmt, ...);
+extern int bvcformata (bstring b, int count, const char * fmt, va_list arglist);
+
+#define bvformata(ret, b, fmt, lastarg) { \
+bstring bstrtmp_b = (b); \
+const char * bstrtmp_fmt = (fmt); \
+int bstrtmp_r = BSTR_ERR, bstrtmp_sz = 16; \
+	for (;;) { \
+		va_list bstrtmp_arglist; \
+		va_start (bstrtmp_arglist, lastarg); \
+		bstrtmp_r = bvcformata (bstrtmp_b, bstrtmp_sz, bstrtmp_fmt, bstrtmp_arglist); \
+		va_end (bstrtmp_arglist); \
+		if (bstrtmp_r >= 0) { /* Everything went ok */ \
+			bstrtmp_r = BSTR_OK; \
+			break; \
+		} else if (-bstrtmp_r <= bstrtmp_sz) { /* A real error? */ \
+			bstrtmp_r = BSTR_ERR; \
+			break; \
+		} \
+		bstrtmp_sz = -bstrtmp_r; /* Doubled or target size */ \
+	} \
+	ret = bstrtmp_r; \
+}
+
 #endif
 
 typedef int (*bNgetc) (void *parm);
