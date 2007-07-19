@@ -24,12 +24,13 @@
 #include "php.h"
 #include "ext/standard/info.h"
 #include "php_bbcode.h"
-#include "bbcode.h"
-#include "bstrlib.h"
+#include "lib/bbcode.h"
+#include "lib/stacklib.h"
+#include "lib/bstrlib.h"
 
 typedef struct _bbcode_object {
 	zend_object     std;
-	long 				rsrc_id;
+	long 			rsrc_id;
 } bbcode_object;
 
 int le_bbcode;
@@ -494,9 +495,7 @@ PHP_MINFO_FUNCTION(bbcode)
 	php_info_print_table_header(2, "BBCode support", "enabled");
 	php_info_print_table_row(2, "BBCode Version Support", PHP_BBCODE_VERSION);
 	bstring tmp;
-	tmp=bformat("%d",STACK_MAX_SIZE);
-	php_info_print_table_row(2, "BBCode Max Stack Size", tmp->data);
-	bdestroy(tmp);
+	php_info_print_table_row(2, "BBCode Max Stack Size", "Dynamic");
 	tmp=bformat("%d",BBCODE_MAX_CODES);
 	php_info_print_table_row(2, "BBCode Max Elements", tmp->data);
 	php_info_print_table_row(1, "This extension makes use of Bstrlib available at http://bstrlib.sf.net");

@@ -13,6 +13,7 @@
 #include <time.h>
 #include "bbcode.h"
 #include "bstrlib.h"
+#include "stacklib.h"
 
 extern void bbcode_destroy_tag_stack(bbcode_container *tag_list){
 	for (;tag_list->size>0; tag_list->size--){
@@ -289,10 +290,9 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 	/* Working Stacks */
 	bbcode_stack work_stack;
 	work_stack.size=0;
-	int drop_stack[STACK_MAX_SIZE];
-	int drop_stack_size=0;
-	int opened_stack[STACK_MAX_SIZE];
-	int opened_stack_size=0;
+	bbcode_int_stack drop_stack;
+	bbcode_int_stack opened_stack;
+	int tmp_int;
 	int accepted_tags[BBCODE_MAX_CODES];
 	int accepted_tags_size;
 	/* End Working Stacks */
@@ -309,6 +309,10 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 	bstring tmpText;
 	/* End Working Stack */
 	
+	// Init bbcode_stack
+	bbcode_stack_init(&work_stack);
+	bbcode_int_stack_init(&drop_stack);
+	bbcode_int_stack_init(&opened_stack);
 	do {
 		tmp=bstrchrp(string,'[',offset);
 		if (tmp==-1)
@@ -325,8 +329,8 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 					tmp_stack_line.tagId=bbcode_get_tag_id(tmpText,tag_list);
 					bdestroy(tmpText);
 					if (tmp_stack_line.tagId>=0){
-						for (i=drop_stack_size;i>0;i--){
-							if (drop_stack[i-1]==tmp_stack_line.tagId){
+						for (i=drop_stack.size;i>0;i--){
+							if (drop_stack.stack[i-1]==tmp_stack_line.tagId){
 								/* Dropping Tag */
 								bdelete(string,offset,next_close-offset+1);
 								offset--;
@@ -337,13 +341,13 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 						if(i==0){
 							/* On a pas trouvé le tag en drop list */
 							/* On vérifie qu'on a un élément ouvert correspondant */
-							for (i=opened_stack_size;i>0;i--){
-								if (opened_stack[i-1]==tmp_stack_line.tagId){
+							for (i=opened_stack.size;i>0;i--){
+								if (opened_stack.stack[i-1]==tmp_stack_line.tagId){
 									break;
 								}
 							}
 							if (i!=0){ /* Tag Ouvert, on le traite */
-								if (tag_list->array[opened_stack[opened_stack_size-1]].flags&BBCODE_FLAGS_CDATA_NOT_ALLOWED){
+								if (tag_list->array[opened_stack.stack[opened_stack.size-1]].flags&BBCODE_FLAGS_CDATA_NOT_ALLOWED){
 									tmp_stack_line.argument=bfromcstr("");
 								} else {
 									tmp_stack_line.argument=bmidstr(string,lastfound,offset-lastfound);
@@ -373,21 +377,19 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 								}
 								lastfound=offset=next_close+1;
 								/* traitement du close */
-								for (i--;i<opened_stack_size;){
-									drop_stack[drop_stack_size++]=opened_stack[--opened_stack_size];
+								for (i--;i<opened_stack.size;){
+									bbcode_int_stack_pop(&opened_stack,&tmp_int);
+									bbcode_int_stack_push(&drop_stack,tmp_int);
 									bbcode_close_tag(&work_stack, tag_list);
 								}
-								--drop_stack_size;
+								bbcode_int_stack_pop(&drop_stack,&tmp_int);
 								/* Reccup de l'élément contenu */
 								continue;
 							}
 							/* Tag non ouvert, pas en drop list, on le laisse là */
 						} else {
 							/* suppression du tag et réorganisation de la liste */
-							for (i=i;i<drop_stack_size;i++){
-								drop_stack[i-1]=drop_stack[i];
-							}
-							drop_stack_size--;
+							bbcode_int_stack_drop(&drop_stack,i);
 							continue;
 						}
 					}
@@ -414,13 +416,13 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 						tmpText = bmidstr (string, offset+1, next_equal-(offset+1));
 						tmp_stack_line.tagId=bbcode_get_tag_id(tmpText,tag_list);
 						if (tmp_stack_line.tagId>=0){
-							if (opened_stack_size>0){
-								tmp_stack_line.tagId=bbcode_check_tag_id(tmp_stack_line.tagId,tag_list,opened_stack[opened_stack_size-1]);
+							if (opened_stack.size>0){
+								tmp_stack_line.tagId=bbcode_check_tag_id(tmp_stack_line.tagId,tag_list,opened_stack.stack[opened_stack.size-1]);
 							} else if (tag_list->array[tmp_stack_line.tagId].parent_list_size>0) {
 								tmp_stack_line.tagId=-1;
 							} else if (tag_list->has_root) {
 								tmp_stack_line.tagId=bbcode_check_tag_id(tmp_stack_line.tagId,tag_list,BBCODE_MAX_CODES);
-							}
+							}	
 						}
 						bdestroy(tmpText);
 						/*** End Detection du tag Id ***/
@@ -450,14 +452,13 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 							}
 							/*** PARSE ARG END ***/
 							if (tag_list->array[tmp_stack_line.tagId].type==BBCODE_TYPE_ARG || tag_list->array[tmp_stack_line.tagId].type==BBCODE_TYPE_OPTARG){
-								if (opened_stack_size<STACK_MAX_SIZE){
-									opened_stack[opened_stack_size]=tmp_stack_line.tagId;
-									opened_stack_size++;
+								if (1){
+									bbcode_int_stack_push(&opened_stack,tmp_stack_line.tagId);
 									tmp_stack_line.argument=bmidstr(string,next_equal+1,next_close-next_equal-1);
 									if (tag_list->array[tmp_stack_line.tagId].flags&BBCODE_FLAGS_ARG_PARSING){
 										bbcode_parse_string(tmp_stack_line.argument, tag_list);
 									}
-									if (tag_list->array[opened_stack[opened_stack_size-1]].flags&BBCODE_FLAGS_CDATA_NOT_ALLOWED){
+									if (tag_list->array[opened_stack.stack[opened_stack.size-1]].flags&BBCODE_FLAGS_CDATA_NOT_ALLOWED){
 										before.argument=bfromcstr("");
 									} else {
 										before.argument=bmidstr(string,lastfound,offset-lastfound);
@@ -486,8 +487,8 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 						tmpText = bmidstr (string, offset+1, next_close-(offset+1));
 						tmp_stack_line.tagId=bbcode_get_tag_id(tmpText,tag_list);
 						if (tmp_stack_line.tagId>=0){
-							if (opened_stack_size>0){
-								tmp_stack_line.tagId=bbcode_check_tag_id(tmp_stack_line.tagId,tag_list,opened_stack[opened_stack_size-1]);
+							if (opened_stack.size>0){
+								tmp_stack_line.tagId=bbcode_check_tag_id(tmp_stack_line.tagId,tag_list,opened_stack.stack[opened_stack.size-1]);
 							} else if (tag_list->array[tmp_stack_line.tagId].parent_list_size>0) {
 								tmp_stack_line.tagId=-1;
 							} else if (tag_list->has_root) {
@@ -507,11 +508,10 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 							}
 							/*** NO NESTING END ***/
 							if (tag_list->array[tmp_stack_line.tagId].type==BBCODE_TYPE_NOARG || tag_list->array[tmp_stack_line.tagId].type==BBCODE_TYPE_OPTARG){
-								if (opened_stack_size<STACK_MAX_SIZE){
-									opened_stack[opened_stack_size]=tmp_stack_line.tagId;
-									opened_stack_size++;
+								if (1){
+									bbcode_int_stack_push(&opened_stack,tmp_stack_line.tagId);
 									tmp_stack_line.argument=NULL;
-									if (tag_list->array[opened_stack[opened_stack_size-1]].flags&BBCODE_FLAGS_CDATA_NOT_ALLOWED){
+									if (tag_list->array[opened_stack.stack[opened_stack.size-1]].flags&BBCODE_FLAGS_CDATA_NOT_ALLOWED){
 										before.argument=bfromcstr("");
 									} else {
 										before.argument=bmidstr(string,lastfound,offset-lastfound);
@@ -587,6 +587,9 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 		bdestroy(before.argument);
 	}
 	bbcode_stack_pop(&work_stack,&tmp_stack_line);
+	bbcode_stack_free(&work_stack);
+	bbcode_int_stack_free(&drop_stack);
+	bbcode_int_stack_free(&opened_stack);
 	bassign(string,tmp_stack_line.argument);
 	bdestroy(tmp_stack_line.argument);
 	return 0;
@@ -696,32 +699,4 @@ static int bbcode_close_tag(bbcode_stack *stack, bbcode_container *tag_list){
 		}
 	}while(before.tagId==-1);
 	return 0;
-}
-/** Stack Management **/
-static int bbcode_stack_push	(bbcode_stack *stack, bbcode_stackLine stackLine){
-	if (stack->size<STACK_MAX_SIZE){
-	    ++stack->size;
-	    /* Insert Datas */
-	    stack->stack[stack->size-1]=stackLine;
-	    if(stack->size<STACK_MAX_SIZE){
-		    stack->stack[stack->size].argument=NULL;
-		    stack->stack[stack->size].tagId=-2;
-		}
-	    return 0;
-	} else {
-		return 1;
-	}
-}
-static int bbcode_stack_pop(bbcode_stack *stack, bbcode_stackLine *stackLine){
-    if (stack->size>0){
-	    --(stack->size);
-	    *stackLine=stack->stack[stack->size];
-	    stack->stack[stack->size].argument=NULL;
-	    stack->stack[stack->size].tagId=-2;
-	    return 0;
-    }else{
-    	stackLine->argument=NULL;
-    	stackLine->tagId=-1;
-    }
-    return 1;
 }
