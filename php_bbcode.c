@@ -492,13 +492,14 @@ PHP_FUNCTION(bbcode_parse)
 PHP_MINFO_FUNCTION(bbcode)
 {
 	php_info_print_table_start();
-	php_info_print_table_header(2, "BBCode support", "enabled");
+	php_info_print_table_row(2, "BBCode support", "enabled");
 	php_info_print_table_row(2, "BBCode Version Support", PHP_BBCODE_VERSION);
+	php_info_print_table_row(2, "BBCode Library Version", BBCODE_LIB_VERSION);
 	bstring tmp;
 	php_info_print_table_row(2, "BBCode Max Stack Size", "Dynamic");
 	tmp=bformat("%d",BBCODE_MAX_CODES);
 	php_info_print_table_row(2, "BBCode Max Elements", tmp->data);
-	php_info_print_table_row(1, "This extension makes use of Bstrlib available at http://bstrlib.sf.net");
+	php_info_print_table_header(1, "This extension makes use of Bstrlib available at http://bstrlib.sf.net");
 	bdestroy(tmp);
 /*	php_info_print_table_header(2, "Builtins Callback", "Associated Constant");
 	php_info_print_table_row(2, "php_bbcode_void_content", 	"BBCODE_CALLBACK_CONTENT_VOID");
