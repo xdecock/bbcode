@@ -8,7 +8,7 @@
 #define BBCODE_H_
 #include "bstrlib.h"
 #include "stacklib.h"
-
+#define BBCODE_LIB_VERSION "1.1"
 
 #define BBCODE_TYPE_NOARG 1
 #define BBCODE_TYPE_SINGLE 2
