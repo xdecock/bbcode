@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<package version="2.0" xmlns="http://pear.php.net/dtd/package-2.0"
+    xmlns:tasks="http://pear.php.net/dtd/tasks-1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0
+http://pear.php.net/dtd/tasks-1.0.xsd
+http://pear.php.net/dtd/package-2.0
+http://pear.php.net/dtd/package-2.0.xsd">
+
+  <name>bbcode</name>
+  <channel>pecl.php.net</channel>
+
+  <summary>BBCode parsing Extension</summary>
+
+  <description>
+  This is a quick and efficient BBCode Parsing Library.
+  It provides various tag types, high speed one pass parsing,
+  callback system, tag position restriction.
+  
+  It will force closing BBCode tags in the good order, and closing
+  terminating tags at the end of the string this is in order to ensure
+  HTML Validity in all case.
+  </description>
+
+  <lead>
+    <name>Xavier De Cock</name>
+    <user>void</user>
+    <email>void@php.net</email>
+    <active>yes</active>
+  </lead>
+
+  <date>2007-07-20</date>
+  <version>
+    <release>0.9.0</release>
+    <api>0.9.0</api>
+  </version>
+  <stability>
+    <release>beta</release>
+    <api>beta</api>
+  </stability>
+
+  <license uri="http://www.php.net/license">PHP License</license>
+  
+  <notes>
+  Initial Release, many things have been stabilized and fixed sized
+  stack have been removed in favour of dynamicaly allocated stack.
+  This is able to reduce memory usage in many case and will reduce risk
+  of stack overflow and therefore segfaults / Arbitrary code execution.
+  </notes>
+
+  <contents>
+    <dir name="/">
+      <file role='doc' name='EXPERIMENTAL'/>
+      <file role='doc' name='CREDITS'/>
+      <file role='src' name='config.m4'/>
+      <file role='src' name='php_bbcode.h'/>
+      <file role='src' name='php_bbcode.c'/>
+      <dir name="lib">
+        <file role='src' name='bbcode.c'/>
+        <file role='src' name='bbcode.h'/>
+        <file role='src' name='bstrlib.c'/>
+        <file role='src' name='bstrlib.h'/>
+        <file role='src' name='stacklib.c'/>
+        <file role='src' name='stacklib.h'/>
+      </dir>
+      <dir name="tests">
+        <file role='test' name='test_1.phpt'/>
+        <file role='test' name='test_2.phpt'/>
+        <file role='test' name='test_3.phpt'/>
+        <file role='test' name='test_4.phpt'/>
+        <file role='test' name='test_5.phpt'/>
+      </dir>
+    </dir>
+  </contents>
+
+  <dependencies>
+    <required>
+      <php>
+        <min>4.0.0</min>
+      </php>
+      <pearinstaller>
+        <min>1.4.0a1</min>
+      </pearinstaller>
+    </required>
+  </dependencies>
+
+  <providesextension>bbcode</providesextension>
+  <extsrcrelease />
+</package>
