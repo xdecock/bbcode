@@ -31,7 +31,7 @@ http://pear.php.net/dtd/package-2.0.xsd">
 
   <date>2007-07-20</date>
   <version>
-    <release>0.9.0</release>
+    <release>0.9.1</release>
     <api>0.9.0</api>
   </version>
   <stability>
@@ -42,10 +42,7 @@ http://pear.php.net/dtd/package-2.0.xsd">
   <license uri="http://www.php.net/license">PHP License</license>
   
   <notes>
-  Initial Release, many things have been stabilized and fixed sized
-  stack have been removed in favour of dynamicaly allocated stack.
-  This is able to reduce memory usage in many case and will reduce risk
-  of stack overflow and therefore segfaults / Arbitrary code execution.
+  Corrected config.m4 - build problem
   </notes>
 
   <contents>
