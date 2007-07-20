@@ -24,9 +24,8 @@ extern void bbcode_destroy_tag_stack(bbcode_container *tag_list){
 	    bdestroy(tag_list->array[tag_list->size-1].childs);
 	    bdestroy(tag_list->array[tag_list->size-1].content_handling_u);
 	    bdestroy(tag_list->array[tag_list->size-1].param_handling_u);
-	    if (tag_list->array[tag_list->size-1].child_list!=NULL){
-	    	free(tag_list->array[tag_list->size-1].child_list);
-	    }
+	    bbcode_int_stack_free( &(tag_list->array[tag_list->size-1].child_list)	);
+	    bbcode_int_stack_free( &(tag_list->array[tag_list->size-1].parent_list) );
 	}
 	if(tag_list->has_root!=0) {
 	    bdestroy(tag_list->array[BBCODE_MAX_CODES].tag);
@@ -37,12 +36,6 @@ extern void bbcode_destroy_tag_stack(bbcode_container *tag_list){
 	    bdestroy(tag_list->array[BBCODE_MAX_CODES].parents);
 	    bdestroy(tag_list->array[BBCODE_MAX_CODES].content_handling_u);
 	    bdestroy(tag_list->array[BBCODE_MAX_CODES].param_handling_u);
-	    if (tag_list->array[BBCODE_MAX_CODES].child_list!=NULL){
-	    	free(tag_list->array[BBCODE_MAX_CODES].child_list);
-	    }
-	    if (tag_list->array[BBCODE_MAX_CODES].parent_list!=NULL){
-	    	free(tag_list->array[BBCODE_MAX_CODES].parent_list);
-	    }
     }
     free(tag_list);
 }
@@ -81,10 +74,8 @@ extern int bbcode_add_element(char *tag, char type, char flags, char *open_tag, 
 	    tag_list->array[pos].param_handling_u			=	bfromcstr(param_handling_u);
 	    tag_list->array[pos].content_handling_func	=	content_handling_func;
 	    tag_list->array[pos].param_handling_func	=	param_handling_func;
-	    tag_list->array[pos].child_list_size					=	0;
-	    tag_list->array[pos].parent_list_size				=	0;
-	    tag_list->array[pos].child_list							=	NULL;
-	    tag_list->array[pos].parent_list						=	NULL;
+	    bbcode_int_stack_init( &(tag_list->array[pos].child_list)	);
+	    bbcode_int_stack_init( &(tag_list->array[pos].parent_list) );
 	    tag_list->is_ready=0;
 	    return 0;
     }
@@ -94,16 +85,16 @@ extern int bbcode_prepare_tag_list(bbcode_container *tag_list) {
 	int i, j, k;
 	bstring working_string;
 	struct bstrList *bsplited;
-	int tmp_stack[BBCODE_MAX_CODES];
-	int tmp_stack_size=0;
+	bbcode_int_stack tmp_stack;
 	int find, not_in_list;
 	if (tag_list->is_ready==1){
 		return 0;
 	} else {
+		bbcode_int_stack_init(&tmp_stack);
 		for(i = 0;i<tag_list->size;i++) {
 			if (strcmp( tag_list->array[i].childs->data , "all" ) ){
 				if (tag_list->array[i].childs->slen>0 && tag_list->array[i].childs->data[0]=='!'){
-					tmp_stack_size=0;
+					tmp_stack.size=0;
 					working_string=bstrcpy(tag_list->array[i].childs);
 					bdelete(working_string,0,1);
 					bsplited=bsplit (working_string, ',' );
@@ -112,95 +103,81 @@ extern int bbcode_prepare_tag_list(bbcode_container *tag_list) {
 						find = bbcode_get_tag_id ((bsplited->entry[j]),tag_list);
 						if (find>=0){
 							not_in_list=1;
-							for (k=0;k<tmp_stack_size;k++){
-								if (find==tmp_stack[k]){
+							for (k=0;k<tmp_stack.size;k++){
+								if (find==tmp_stack.stack[k]){
 									not_in_list=0;
 									break;
 								}
 							}
 							if (not_in_list){
-								tmp_stack[k]=find;
-								tmp_stack_size++;
+								bbcode_int_stack_push(&tmp_stack,find);
 							}
 						}
 					}
 					bstrListDestroy(bsplited);
 					for (j=0; j<tag_list->size; j++){
 						not_in_list=1;
-						for (k=0;k<tmp_stack_size;k++){
-							if (j==tmp_stack[k]){
+						for (k=0;k<tmp_stack.size;k++){
+							if (j==tmp_stack.stack[k]){
 								not_in_list=0;
 								break;
 							}
 						}
 						if (not_in_list){
-							if (tag_list->array[i].child_list==NULL){
-								tag_list->array[i].child_list=malloc(BBCODE_MAX_CODES*sizeof(int));
-							}
-							tag_list->array[i].child_list[tag_list->array[i].child_list_size]=j;
-							tag_list->array[i].child_list_size++;
+							bbcode_int_stack_push(&(tag_list->array[i].child_list),j);
 						}
 					}
 				} else {
-					tag_list->array[i].child_list_size=0;
 					bsplited=bsplit ( tag_list->array[i].childs, ',' );
 					for (j=0;j<bsplited->qty;j++){
-						find = bbcode_get_tag_id ((bsplited->entry[j]),tag_list);
+						find = bbcode_get_tag_id((bsplited->entry[j]),tag_list);
 						if (find>=0){
 							not_in_list=1;
-							for (k=0;k<tag_list->array[i].child_list_size;k++){
-								if (find==tag_list->array[i].child_list[k]){
+							for (k=0;k<tag_list->array[i].child_list.size;k++){
+								if (find==tag_list->array[i].child_list.stack[k]){
 									not_in_list=0;
 									break;
 								}
 							}
 							if (not_in_list){
-								if (tag_list->array[i].child_list==NULL){
-									tag_list->array[i].child_list=malloc(BBCODE_MAX_CODES*sizeof(int));
-								}
-								tag_list->array[i].child_list[tag_list->array[i].child_list_size]=find;
-								tag_list->array[i].child_list_size++;
+								bbcode_int_stack_push(&(tag_list->array[i].child_list),j);
 							}
 						}
 					}
 					bstrListDestroy(bsplited);
 				}
 			} else {
-				tag_list->array[i].child_list_size=-1;
+				tag_list->array[i].child_list.size=-1;
 			}
 			/** parents **/
 			if (strcmp( tag_list->array[i].parents->data , "all" ) ){
-				tag_list->array[i].parent_list_size=0;
+				tag_list->array[i].parent_list.size=0;
 				bsplited=bsplit ( tag_list->array[i].parents, ',' );
 				for (j=0;j<bsplited->qty;j++){
 					find = bbcode_get_tag_id ((bsplited->entry[j]),tag_list);
 					if (find>=0){
 						not_in_list=1;
-						for (k=0;k<tag_list->array[i].parent_list_size;k++){
-							if (find==tag_list->array[i].parent_list[k]){
+						for (k=0;k<tag_list->array[i].parent_list.size;k++){
+							if (find==tag_list->array[i].parent_list.stack[k]){
 								not_in_list=0;
 								break;
 							}
 						}
 						if (not_in_list){
-							if (tag_list->array[i].parent_list==NULL){
-								tag_list->array[i].parent_list=malloc(BBCODE_MAX_CODES*sizeof(int));
-							}
-							tag_list->array[i].parent_list[tag_list->array[i].parent_list_size]=find;
-							tag_list->array[i].parent_list_size++;
+							bbcode_int_stack_drop(&(tag_list->array[i].parent_list),j);
 						}
 					}
 				}
 				bstrListDestroy(bsplited);
 			} else {
-				tag_list->array[i].parent_list_size=-1;
+				tag_list->array[i].parent_list.size=-1;
 			}
 		}
 		if (tag_list->has_root){
 			i=BBCODE_MAX_CODES;
 			if (strcmp( tag_list->array[i].childs->data , "all" ) ){
 				if (tag_list->array[i].childs->slen>0 && tag_list->array[i].childs->data[0]=='!'){
-					tmp_stack_size=0;
+					tmp_stack.size=0;
 					working_string=bstrcpy(tag_list->array[i].childs);
 					bdelete(working_string,0,1);
 					bsplited=bsplit (working_string, ',' );
@@ -209,64 +186,56 @@ extern int bbcode_prepare_tag_list(bbcode_container *tag_list) {
 						find = bbcode_get_tag_id ((bsplited->entry[j]),tag_list);
 						if (find>=0){
 							not_in_list=1;
-							for (k=0;k<tmp_stack_size;k++){
-								if (find==tmp_stack[k]){
+							for (k=0;k<tmp_stack.size;k++){
+								if (find==tmp_stack.stack[k]){
 									not_in_list=0;
 									break;
 								}
 							}
 							if (not_in_list){
-								tmp_stack[k]=find;
-								tmp_stack_size++;
+								bbcode_int_stack_push(&tmp_stack,find);
 							}
 						}
 					}
 					bstrListDestroy(bsplited);
 					for (j=0; j<tag_list->size; j++){
 						not_in_list=1;
-						for (k=0;k<tmp_stack_size;k++){
-							if (j==tmp_stack[k]){
+						for (k=0;k<tmp_stack.size;k++){
+							if (j==tmp_stack.stack[k]){
 								not_in_list=0;
 								break;
 							}
 						}
 						if (not_in_list){
-							if (tag_list->array[i].child_list==NULL){
-								tag_list->array[i].child_list=malloc(BBCODE_MAX_CODES*sizeof(int));
-							}
-							tag_list->array[i].child_list[tag_list->array[i].child_list_size]=j;
-							tag_list->array[i].child_list_size++;
+							bbcode_int_stack_push(&(tag_list->array[i].child_list),j);
 						}
 					}
 				} else {
-					tag_list->array[i].child_list_size=0;
+					tag_list->array[i].child_list.size=0;
 					bsplited=bsplit ( tag_list->array[i].childs, ',' );
 					for (j=0;j<bsplited->qty;j++){
 						find = bbcode_get_tag_id ((bsplited->entry[j]),tag_list);
 						if (find>=0){
 							not_in_list=1;
-							for (k=0;k<tag_list->array[i].child_list_size;k++){
-								if (find==tag_list->array[i].child_list[k]){
+							for (k=0;k<tag_list->array[i].child_list.size;k++){
+								if (find==tag_list->array[i].child_list.stack[k]){
 									not_in_list=0;
 									break;
 								}
 							}
 							if (not_in_list){
-								if (tag_list->array[i].child_list==NULL){
-									tag_list->array[i].child_list=malloc(BBCODE_MAX_CODES*sizeof(int));
-								}
-								tag_list->array[i].child_list[tag_list->array[i].child_list_size]=find;
-								tag_list->array[i].child_list_size++;
+								bbcode_int_stack_push(&(tag_list->array[i].child_list),j);
 							}
 						}
 					}
 					bstrListDestroy(bsplited);
 				}
 			} else {
-				tag_list->array[i].child_list_size=-1;
+				tag_list->array[i].child_list.size=-1;
 			}
 		}
 		tag_list->is_ready=1;
+		bbcode_int_stack_free(&tmp_stack);
 		return 0;
 	}
 	return 1;
@@ -293,8 +262,6 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 	bbcode_int_stack drop_stack;
 	bbcode_int_stack opened_stack;
 	int tmp_int;
-	int accepted_tags[BBCODE_MAX_CODES];
-	int accepted_tags_size;
 	/* End Working Stacks */
 	/* Position pointers */
 	int next_close=0;
@@ -312,7 +279,7 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 	// Init bbcode_stack
 	bbcode_stack_init(&work_stack);
 	bbcode_int_stack_init(&drop_stack);
-	bbcode_int_stack_init(&opened_stack);
+	bbcode_int_stack_init(&drop_stack);
 	do {
 		tmp=bstrchrp(string,'[',offset);
 		if (tmp==-1)
@@ -418,7 +385,7 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 						if (tmp_stack_line.tagId>=0){
 							if (opened_stack.size>0){
 								tmp_stack_line.tagId=bbcode_check_tag_id(tmp_stack_line.tagId,tag_list,opened_stack.stack[opened_stack.size-1]);
-							} else if (tag_list->array[tmp_stack_line.tagId].parent_list_size>0) {
+							} else if (tag_list->array[tmp_stack_line.tagId].parent_list.size>0) {
 								tmp_stack_line.tagId=-1;
 							} else if (tag_list->has_root) {
 								tmp_stack_line.tagId=bbcode_check_tag_id(tmp_stack_line.tagId,tag_list,BBCODE_MAX_CODES);
@@ -429,7 +396,7 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 						if (tmp_stack_line.tagId>=0){
 							/*** NO NESTING BEGIN ***/
 							int pos_end_tag=next_close;
-							if (tag_list->array[tmp_stack_line.tagId].child_list_size==0){
+							if (tag_list->array[tmp_stack_line.tagId].child_list.size==0){
 								bstring close_search;
 								close_search=bfromcstr("[/");
 								bconcat(close_search,tag_list->array[tmp_stack_line.tagId].tag);
@@ -489,7 +456,7 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 						if (tmp_stack_line.tagId>=0){
 							if (opened_stack.size>0){
 								tmp_stack_line.tagId=bbcode_check_tag_id(tmp_stack_line.tagId,tag_list,opened_stack.stack[opened_stack.size-1]);
-							} else if (tag_list->array[tmp_stack_line.tagId].parent_list_size>0) {
+							} else if (tag_list->array[tmp_stack_line.tagId].parent_list.size>0) {
 								tmp_stack_line.tagId=-1;
 							} else if (tag_list->has_root) {
 								tmp_stack_line.tagId=bbcode_check_tag_id(tmp_stack_line.tagId,tag_list,BBCODE_MAX_CODES);
@@ -499,7 +466,7 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 						if (tmp_stack_line.tagId>=0){
 							/*** NO NESTING BEGIN ***/
 							int pos_end_tag=next_close;
-							if (tag_list->array[tmp_stack_line.tagId].child_list_size==0){
+							if (tag_list->array[tmp_stack_line.tagId].child_list.size==0){
 								bstring close_search;
 								close_search=bfromcstr("[/");
 								bconcat(close_search,tag_list->array[tmp_stack_line.tagId].tag);
@@ -597,19 +564,19 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 int bbcode_check_tag_id(int tag_id, bbcode_container *array, int context){
 	int i;
 	/** If tag has parent Limitation check it's OK */
-	if (array->array[tag_id].parent_list_size>0){
-		for (i=0;i<array->array[tag_id].parent_list_size;i++){
-			if (array->array[tag_id].parent_list[i]==context){
+	if (array->array[tag_id].parent_list.size>0){
+		for (i=0;i<array->array[tag_id].parent_list.size;i++){
+			if (array->array[tag_id].parent_list.stack[i]==context){
 				return tag_id;
 			}
 		}
-	} else	if (array->array[context].child_list_size==-1) {
+	} else	if (array->array[context].child_list.size==-1) {
 		return tag_id;
-	} else if (array->array[context].child_list_size==0) {
+	} else if (array->array[context].child_list.size==0) {
 		return -1;
 	} else {
-		for (i=0;i<array->array[context].child_list_size;i++) {
-			if (array->array[context].child_list[i]==tag_id) {
+		for (i=0;i<array->array[context].child_list.size;i++) {
+			if (array->array[context].child_list.stack[i]==tag_id) {
 				return tag_id;
 			}
 		}

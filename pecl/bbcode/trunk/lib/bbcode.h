@@ -31,10 +31,8 @@ typedef struct _bbcode {
     bstring parents;
     bstring content_handling_u;
     bstring param_handling_u;
-    int *child_list;
-    int child_list_size;
-    int *parent_list;
-    int parent_list_size;
+    bbcode_int_stack child_list;
+    bbcode_int_stack parent_list;
     
     int (*content_handling_func)	(bstring content, bstring param, bstring user_func);
     int (*param_handling_func)	(bstring content, bstring param, bstring user_func);
