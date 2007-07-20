@@ -279,7 +279,7 @@ extern int bbcode_parse_string(bstring string, bbcode_container *tag_list) {
 	// Init bbcode_stack
 	bbcode_stack_init(&work_stack);
 	bbcode_int_stack_init(&drop_stack);
-	bbcode_int_stack_init(&drop_stack);
+	bbcode_int_stack_init(&opened_stack);
 	do {
 		tmp=bstrchrp(string,'[',offset);
 		if (tmp==-1)
