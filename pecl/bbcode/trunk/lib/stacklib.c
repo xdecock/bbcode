@@ -12,7 +12,10 @@ int bbcode_int_stack_init(bbcode_int_stack *stack){
 int bbcode_int_stack_free(bbcode_int_stack *stack){
 	stack->dimension=0;
 	stack->size=0;
-	free(stack->stack);
+	if (stack->stack!=NULL){ 
+		free(stack->stack);
+	}
+	stack->stack=NULL;
 	return 0;
 }
 int bbcode_int_stack_grow(bbcode_int_stack *stack){
@@ -70,7 +73,10 @@ int bbcode_stack_init(bbcode_stack *stack){
 int bbcode_stack_free(bbcode_stack *stack){
 	stack->size=0;
 	stack->dimension=0;
-	free(stack->stack);
+	if (stack->stack!=NULL){ 
+		free(stack->stack);
+	}
+	stack->stack=NULL;
 	return 0;
 }
 int bbcode_stack_grow(bbcode_stack *stack){
