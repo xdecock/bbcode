@@ -128,6 +128,7 @@ extern int bbcode_prepare_tag_list(bbcode_container *tag_list) {
 						}
 					}
 				} else {
+					tag_list->array[i].child_list.size=0;
 					bsplited=bsplit ( tag_list->array[i].childs, ',' );
 					for (j=0;j<bsplited->qty;j++){
 						find = bbcode_get_tag_id((bsplited->entry[j]),tag_list);
