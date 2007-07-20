@@ -92,9 +92,9 @@ extern int bbcode_prepare_tag_list(bbcode_container *tag_list) {
 	} else {
 		bbcode_int_stack_init(&tmp_stack);
 		for(i = 0;i<tag_list->size;i++) {
+			tmp_stack.size=0;
 			if (strcmp( tag_list->array[i].childs->data , "all" ) ){
 				if (tag_list->array[i].childs->slen>0 && tag_list->array[i].childs->data[0]=='!'){
-					tmp_stack.size=0;
 					working_string=bstrcpy(tag_list->array[i].childs);
 					bdelete(working_string,0,1);
 					bsplited=bsplit (working_string, ',' );
@@ -141,7 +141,7 @@ extern int bbcode_prepare_tag_list(bbcode_container *tag_list) {
 								}
 							}
 							if (not_in_list){
-								bbcode_int_stack_push(&(tag_list->array[i].child_list),j);
+								bbcode_int_stack_push(&(tag_list->array[i].child_list),find);
 							}
 						}
 					}
