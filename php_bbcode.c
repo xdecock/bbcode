@@ -200,32 +200,9 @@ static void _php_bbcode_add_element(bbcode_container *container, char *tag_name,
     if (Z_TYPE_P(content) == IS_ARRAY) {
         ht = HASH_OF(content);
     }
-	if ((SUCCESS == zend_hash_find(ht, "can_nest", sizeof("can_nest"), (void *) &e))
-			&& (Z_TYPE_PP(e) == IS_BOOL)) {
-			if (Z_BVAL_PP(e)){
-				childs = all;
-			} else {
-				childs = empty;
-			}
-	}
 	if ((SUCCESS == zend_hash_find(ht, "flags", sizeof("flags"), (void *) &e))
 			&& (Z_TYPE_PP(e) == IS_LONG)) {
 			flags = Z_LVAL_PP(e);
-	} else {
-		/* Deprecated, only keeped for internal check */
-		if ((SUCCESS == zend_hash_find(ht, "arg_parse", sizeof("arg_parse"), (void *) &e))
-				&& (Z_TYPE_PP(e) == IS_BOOL)) {
-				if (Z_BVAL_PP(e)){
-					flags = flags | BBCODE_FLAGS_ARG_PARSING;
-				}
-		}
-		/* Deprecated, only keeped for internal check */
-		if ((SUCCESS == zend_hash_find(ht, "no_cdata", sizeof("contain_cdata"), (void *) &e))
-				&& (Z_TYPE_PP(e) == IS_BOOL)) {
-				if (!Z_BVAL_PP(e)){
-					flags = flags | BBCODE_FLAGS_CDATA_NOT_ALLOWED;
-				}
-		}
 	}
 	if ((SUCCESS == zend_hash_find(ht, "type", sizeof("type"), (void *) &e))
 			&& (Z_TYPE_PP(e) == IS_LONG)) {
@@ -263,15 +240,6 @@ static void _php_bbcode_add_element(bbcode_container *container, char *tag_name,
 			&& (Z_TYPE_PP(e) == IS_STRING) && Z_STRLEN_PP(e)) {
 		param_handling = Z_STRVAL_PP(e);
 		param_handling_func= _php_bbcode_handling_param;
-	} else {
-		/* Deprecated, only keeped for internal check */
-		if ((SUCCESS == zend_hash_find(ht, "arg_handling", sizeof("arg_handling"), (void *) &e))
-				&& (Z_TYPE_PP(e) == IS_STRING) && Z_STRLEN_PP(e)) {
-			param_handling = Z_STRVAL_PP(e);
-			param_handling_func= _php_bbcode_handling_param;
-		} else {
-			param_handling=empty;
-		}
 	}
 	if ((SUCCESS == zend_hash_find(ht, "childs", sizeof("childs"), (void *) &e))
 			&& (Z_TYPE_PP(e) == IS_STRING)) {
@@ -501,10 +469,10 @@ PHP_MINFO_FUNCTION(bbcode)
 	php_info_print_table_row(2, "BBCode Max Elements", tmp->data);
 	php_info_print_table_header(1, "This extension makes use of Bstrlib available at http://bstrlib.sf.net");
 	bdestroy(tmp);
-/*	php_info_print_table_header(2, "Builtins Callback", "Associated Constant");
+/*	php_info_print_table_header(2, "Builtins Callback", 	"Associated Constant");
 	php_info_print_table_row(2, "php_bbcode_void_content", 	"BBCODE_CALLBACK_CONTENT_VOID");
 	php_info_print_table_row(2, "php_bbcode_void_param", 	"BBCODE_CALLBACK_PARAM_VOID");
-	php_info_print_table_row(2, "php_bbcode_int_param", 		"BBCODE_CALLBACK_CONTENT_INT");
+	php_info_print_table_row(2, "php_bbcode_int_param", 	"BBCODE_CALLBACK_CONTENT_INT");
 	php_info_print_table_row(2, "php_bbcode_int_content", 	"BBCODE_CALLBACK_PARAM_INT");
 */
 	php_info_print_table_end();
