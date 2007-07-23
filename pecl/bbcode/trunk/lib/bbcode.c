@@ -62,16 +62,16 @@ extern int bbcode_add_element(char *tag, char type, char flags, char *open_tag, 
     		return 1;
     	}
 	    /* Insert Datas */
-	    tag_list->array[pos].type								=	type;
-	    tag_list->array[pos].flags								=	flags;
-	    tag_list->array[pos].tag									=	bfromcstr(tag);
-	    tag_list->array[pos].childs								=	bfromcstr(childs);
-	    tag_list->array[pos].parents							=	bfromcstr(parents);
-	    tag_list->array[pos].open_tag						=	bfromcstr(open_tag);
-	    tag_list->array[pos].close_tag						=	bfromcstr(close_tag);
-	    tag_list->array[pos].default_arg						=	bfromcstr(default_arg);
+	    tag_list->array[pos].type					=	type;
+	    tag_list->array[pos].flags					=	flags;
+	    tag_list->array[pos].tag					=	bfromcstr(tag);
+	    tag_list->array[pos].childs					=	bfromcstr(childs);
+	    tag_list->array[pos].parents				=	bfromcstr(parents);
+	    tag_list->array[pos].open_tag				=	bfromcstr(open_tag);
+	    tag_list->array[pos].close_tag				=	bfromcstr(close_tag);
+	    tag_list->array[pos].default_arg			=	bfromcstr(default_arg);
 	    tag_list->array[pos].content_handling_u		=	bfromcstr(content_handling_u);
-	    tag_list->array[pos].param_handling_u			=	bfromcstr(param_handling_u);
+	    tag_list->array[pos].param_handling_u		=	bfromcstr(param_handling_u);
 	    tag_list->array[pos].content_handling_func	=	content_handling_func;
 	    tag_list->array[pos].param_handling_func	=	param_handling_func;
 	    bbcode_int_stack_init( &(tag_list->array[pos].child_list)	);
