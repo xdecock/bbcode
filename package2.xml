@@ -66,6 +66,8 @@ http://pear.php.net/dtd/package-2.0.xsd">
         <file role='test' name='test_3.phpt'/>
         <file role='test' name='test_4.phpt'/>
         <file role='test' name='test_5.phpt'/>
+        <file role='test' name='test_6.phpt'/>
+        <file role='test' name='test_7.phpt'/>
       </dir>
     </dir>
   </contents>
