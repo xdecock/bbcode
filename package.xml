@@ -44,6 +44,8 @@
     <file role="test" name="test_3.phpt"/>
     <file role="test" name="test_4.phpt"/>
     <file role="test" name="test_5.phpt"/>
+    <file role="test" name="test_6.phpt"/>
+    <file role="test" name="test_7.phpt"/>
    </dir> <!-- /tests -->
    <file role="src" name="config.m4"/>
    <file role="doc" name="CREDITS"/>
