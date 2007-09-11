@@ -94,6 +94,9 @@ typedef struct _bbcode_allow_list *                 bbcode_allow_list_p;
 typedef struct _bbcode                              bbcode;
 typedef struct _bbcode *                            bbcode_p;
 typedef struct _bbcode **                           bbcode_pp;
+typedef struct _bbcode_search                       bbcode_search;
+typedef struct _bbcode_search *                     bbcode_search_p;
+typedef struct _bbcode_search **                    bbcode_search_pp;
 typedef struct _bbcode_array                        bbcode_array;
 typedef struct _bbcode_array *                      bbcode_array_p;
 typedef struct _bbcode_list                         bbcode_list;
@@ -217,7 +220,7 @@ struct _bbcode_parse_tree_child{
 struct _bbcode_search{
     bstring tag_name;
     int     tag_id;
-}
+};
 
 /*---------------------------
          Public API
@@ -302,7 +305,7 @@ bbcode_list_p bbcode_list_create();
 void bbcode_list_free(bbcode_list_p list);
 
 /* Check if there is room for a bbcode entry */
-void bbcode_list_check_size(bbcode_list_p list);
+void bbcode_list_check_size(bbcode_list_p list, int size);
 
 /* Insert the special entry "Root" */
 void bbcode_list_set_root(bbcode_list_p list, bbcode_p root);
