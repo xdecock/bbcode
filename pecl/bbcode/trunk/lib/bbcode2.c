@@ -7,7 +7,7 @@
  * See also: Hosted on pecl: http://pecl.php.net/
  * Leave this header As Is, add your name as maintainer, and please, contribute
  * enhancement back to the community
- * Revision : $Rev$
+ * Revision : $Id$
  */
 #include <stdlib.h>
 #include <malloc.h>
@@ -25,6 +25,8 @@ bbcode_parser_p bbcode_parser_create() {
 	parser->bbcodes=bbcode_list_create();
 	parser->smileys=bbcode_smileys_list_create();
 	parser->argument_parser=NULL;
+	parser->content_replace = bfromcstr("{CONTENT}");
+	parser->arg_replace = bfromcstr("{ARG}");
 	return parser;
 }
 
@@ -79,9 +81,9 @@ char *bbcode_parse(bbcode_parser_p parser, char *string, int string_size,
 		int *result_size) {
 	bstring to_parse;
 	bstring parsed;
-	if (parser->options&BBCODE_DISABLE_TREE_BUILD) {
+	if (parser->options & BBCODE_DISABLE_TREE_BUILD) {
 		/* No BBCode Parsing */
-		if (parser->options&BBCODE_FORCE_SMILEYS_OFF) {
+		if (parser->options & BBCODE_FORCE_SMILEYS_OFF) {
 			/* No Smiley Treatment */
 			*result_size=string_size;
 			char *return_value=(char *)malloc(string_size * sizeof(char));
@@ -164,12 +166,11 @@ void bbcode_prepare_tag_list(bbcode_parser_p parser) {
 			max=blength(bbcode->tag);
 		}
 		bbcode->speed_cache=0;
-		if (bbcode->type == BBCODE_TYPE_ARG || bbcode->type
-				== BBCODE_TYPE_OPTARG) {
+		if (bbcode->type == BBCODE_TYPE_ARG|| bbcode->type== BBCODE_TYPE_OPTARG) {
 			bbcode->speed_cache +=BBCODE_CACHE_ACCEPT_ARG;
 		}
-		if (bbcode->type == BBCODE_TYPE_NOARG || bbcode->type
-				== BBCODE_TYPE_SINGLE || bbcode->type == BBCODE_TYPE_OPTARG) {
+		if (bbcode->type == BBCODE_TYPE_NOARG|| bbcode->type
+				== BBCODE_TYPE_SINGLE|| bbcode->type == BBCODE_TYPE_OPTARG) {
 			bbcode->speed_cache +=BBCODE_CACHE_ACCEPT_NOARG;
 		}
 		if (bstrchr(bbcode->open_tag, '{')) {
@@ -257,9 +258,9 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 	bstring end_quote, end_double, end_single, end_html, html_quote, argument,
 			tag;
 	char no_quote;
-	char quote_double=parser->options&BBCODE_ARG_DOUBLE_QUOTE;
-	char quote_single=parser->options&BBCODE_ARG_SINGLE_QUOTE;
-	char quote_html=parser->options&BBCODE_ARG_HTML_QUOTE;
+	char quote_double=parser->options & BBCODE_ARG_DOUBLE_QUOTE;
+	char quote_single=parser->options & BBCODE_ARG_SINGLE_QUOTE;
+	char quote_html=parser->options & BBCODE_ARG_HTML_QUOTE;
 	char added=0;
 	int offset, tag_id, end, next_equal, next_close, string_length;
 	string_length=blength(string);
@@ -287,12 +288,12 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 					if (next_equal<next_close) {
 						tag = bmidstr(string, offset+1, next_equal-offset-1);
 						if (BBCODE_ERR==(tag_id=bbcode_get_tag_id(parser, tag,
-								1))) {
+										1))) {
 							if (quote_double || quote_single) {
 								end=next_close;
 								no_quote=0;
 								if (quote_single && bchar(string, next_equal+1)
-										=='\'') {
+								=='\'') {
 									end_quote=end_single;
 								} else if (quote_double && bchar(string,
 										next_equal+1)=='"') {
@@ -339,7 +340,7 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 						tag=bmidstr(string, offset+1, next_close-offset-1);
 						end=next_close;
 						if (BBCODE_ERR!=(tag_id=bbcode_get_tag_id(parser, tag,
-								0))) {
+										0))) {
 							if (bbcode_allow_list_no_child(bbcode_get_bbcode(parser,6)->childs)) {
 								BBCODE_SPECIAL_CASE_NO_CHILD(NULL)
 							} else {
@@ -437,7 +438,7 @@ void bbcode_close_tag(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 					}
 					parser->current_node->close_string=NULL;
 					if (bbcode_get_bbcode(parser,bbcode_get_cn(parser)->tag_id)->flags
-							& BBCODE_FLAGS_ONE_OPEN_PER_LEVEL) {
+					& BBCODE_FLAGS_ONE_OPEN_PER_LEVEL) {
 						bbcode_tree_mark_element_closed(parser->current_node);
 					} else {
 						bbcode_parse_stack_push_element(close,
@@ -456,15 +457,18 @@ void bbcode_close_tag(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 					/* First Multipart Element */
 					if (!bbcode_array_element(close,i)->flags&BBCODE_TREE_FLAGS_MULTIPART) {
 						if (bbcode_array_element(close,i)->flags
-								&BBCODE_TREE_FLAGS_MULTIPART_FIRST_NODE) {
-
+						&BBCODE_TREE_FLAGS_MULTIPART_FIRST_NODE) {
+							bbcode_array_element(close,i)->multiparts=bbcode_parse_stack_create();
+							bbcode_parse_stack_push_element(bbcode_array_element(close,i)->multiparts,bbcode_array_element(close,i));
 						} else {
-							/* The multipart Tree is common to all multipart elements of a set */
+							/* The multipart Tree is common to all multipart elements of a set
+							 * no changes needed */
 						}
 					}
 					tmp_tree=bbcode_tree_create();
+					bbcode_parse_stack_push_element(bbcode_array_element(close,i)->multiparts,tmp_tree);
 					tmp_tree->flags=BBCODE_TREE_FLAGS_MULTIPART;
-					/* tmp_tree->multiparts=*bbcode_array_element(close,i); */
+					tmp_tree->multiparts=bbcode_array_element(close,i)->multiparts;
 					tmp_tree->open_string=NULL;
 					tmp_tree->close_string=NULL;
 					tmp_tree->parent_node=bbcode_get_cn(parser);
@@ -482,14 +486,119 @@ void bbcode_close_tag(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 /* This make some basic corrections to a given tree */
 void bbcode_correct_tree(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 		int parent_id, char force_false) {
-	char autocorrect;
+	int autocorrect;
 	/* TODO: Implement */
+	autocorrect = parser->options & BBCODE_AUTO_CORRECT;
 }
 
 /* This apply the BBCode rules to generate the final string */
 void bbcode_apply_rules(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 		bstring parsed) {
-	/* TODO: Implement */
+	bbcode_p tag= bbcode_get_bbcode(parser,tree->tag_id);
+	bstring working_string;
+	bstring last_string;
+	bstring tmp_string;
+	int i=0;
+	/* TODO: Implement  Multipart Merging */
+	
+	for (; i < tree->childs.size; i++) {
+		if (tree->childs.element[i].type==BBCODE_TREE_CHILD_TYPE_TREE) {
+			/* Parsing smileys for inner elements (grouped) */
+			if (blength(last_string>0)) {
+				if (tag->speed_cache & BBCODE_CACHE_ACCEPT_SMILEYS) {
+					bbcode_parse_smileys(last_string, parser->smileys);
+				}
+				bconcat(working_string, last_string);
+				bassigncstr(last_string, "");
+			}
+			bbcode_apply_rules(parser, tree->childs.element[i].tree,)
+			bconcat (working_string, tmp_string);
+			bassigncstr(tmp_string, "");
+		} else {
+			bconcat (last_string, tree->childs.element[i].string);
+		}
+		/* Parsing smileys for last elements (grouped) */
+		if (blength(last_string>0)) {
+			if (tag->speed_cache & BBCODE_CACHE_ACCEPT_SMILEYS) {
+				bbcode_parse_smileys(last_string, parser->smileys);
+			}
+			bconcat(working_string, last_string);
+			bassigncstr(last_string, "");
+		}
+		/* If element is not paired And no other special cases */
+		if (!((parser->options & BBCODE_AUTO_CORRECT) 
+				|| (tree->flags & BBCODE_TREE_FLAGS_PAIRED)
+				|| (tag->flags	& BBCODE_FLAGS_ONE_OPEN_PER_LEVEL))) {
+			/* Preparing Return */
+			bassign(parsed, tree->open_string);
+			bconcat(parsed, working_string);
+			/* freeing ressources */
+			bdestroy(working_string);
+			bdestroy(last_string);
+			bdestroy(tmp_string);
+			/* Returning */
+			return;
+		} else {
+			bassign(parsed, tag->open_tag);
+			bstring arg, content;
+			arg=bassigncstr(arg,"");
+			if (tag->flags & BBCODE_CACHE_ACCEPT_ARG){
+				if (blength(tree->argument)>0){
+					arg=bassign(arg,tree->argument);
+				} else {
+					arg=bassign(arg,tag->default_arg);
+				}
+				if (tag->flags & BBCODE_FLAGS_ARG_PARSING){
+					bbcode_parser_p arg_parser;
+					char *string_output;
+					int string_size
+					if (parser->argument_parser != NULL){
+						arg_parser=parser->argument_parser;
+					} else {
+						arg_parser=parser;
+					}
+					string_output=bbcode_parse(arg_parser, arg->data, arg->slen, &string_size);
+					balloc(arg, size + 5);
+					arg->size=string_size;
+					arg->data=string_output;
+				}
+			}
+			/* Callbacks - 1/ Content_callback */
+			if (tag->content_handling_func != NULL){
+				tag->content_handling_func(working_string, arg, tag->content_handling_func_data);
+			}
+			/* Callbacks - 2/ Param callback */
+			if (tag->param_handling_func != NULL){
+				tag->param_handling_func(working_string, arg, tag->param_handling_func_data);
+			}
+			
+			/* Replacing {ARG} by $arg and {CONTENT} by $string in arg & start */
+			if (blength(arg)){
+				bfindreplace(arg, parser->content_replace, working_string,0);
+			}
+			if (tag->speed_cache & BBCODE_CACHE_START_HAS_BRACKET_OPEN){
+				bfindreplace(parsed, parser->content_replace, working_string, 0);
+				bfindreplace(parsed, parser->arg_replace, arg, 0);
+			}
+			/* Replacing {ARG} by $arg in string & end */
+			bfindreplace(working_string, parser->arg_replace, arg,0);
+			bassign(tmp_string, tag->close_tag);
+			if (tag->speed_cache & BBCODE_CACHE_END_HAS_BRACKET_OPEN){
+				bfindreplace(tmp_string, parser->arg_replace, arg, 0);
+			}
+			/* Concat everything */
+			bconcat(parsed, working_string);
+			bconcat(parsed, tmp_string);
+			/* Freeing ressources */
+			bdestroy(working_string);
+			bdestroy(last_string);
+			bdestroy(tmp_string);
+			bdestroy(tmp_string);
+			/* Returning */
+			return;
+		}
+	}
+
 }
 
 /* Search a tag_id from the string */
@@ -513,12 +622,12 @@ int bbcode_get_tag_id(bbcode_parser_p parser, bstring value, int has_arg) {
 						int pos=list[i].tag_id;
 						if (has_arg) {
 							if (bbcode_get_bbcode(parser,pos)->speed_cache
-									& BBCODE_CACHE_ACCEPT_ARG) {
+							& BBCODE_CACHE_ACCEPT_ARG) {
 								return pos;
 							}
 						} else {
 							if (bbcode_get_bbcode(parser,pos)->speed_cache
-									& BBCODE_CACHE_ACCEPT_NOARG) {
+							& BBCODE_CACHE_ACCEPT_NOARG) {
 								return pos;
 							}
 						}
@@ -541,12 +650,12 @@ int bbcode_get_tag_id(bbcode_parser_p parser, bstring value, int has_arg) {
 						pos=list[i].tag_id;
 						if (has_arg) {
 							if (bbcode_get_bbcode(parser,pos)->speed_cache
-									& BBCODE_CACHE_ACCEPT_ARG) {
+							& BBCODE_CACHE_ACCEPT_ARG) {
 								return pos;
 							}
 						} else {
 							if (bbcode_get_bbcode(parser,pos)->speed_cache
-									& BBCODE_CACHE_ACCEPT_NOARG) {
+							& BBCODE_CACHE_ACCEPT_NOARG) {
 								return pos;
 							}
 						}
@@ -576,8 +685,9 @@ int bbcode_get_tag_id(bbcode_parser_p parser, bstring value, int has_arg) {
 /* Translate Smileys */
 void bbcode_parse_smileys(bstring string, bbcode_smiley_list_p list) {
 	int i;
-	for (i=0; i<list->size; i++){
-		bfindreplace(string, list->smileys[i].search, list->smileys[i].replace, 0);
+	for (i=0; i<list->size; i++) {
+		bfindreplace(string, list->smileys[i].search, list->smileys[i].replace,
+				0);
 	}
 }
 
@@ -864,15 +974,30 @@ void bbcode_tree_check_child_size(bbcode_parse_tree_p tree, int size) {
 /* adds a child to the current list (sub_tree) */
 void bbcode_tree_push_tree_child(bbcode_parser_p parser,
 		bbcode_parse_tree_p tree, bbcode_parse_tree_array_p work,
-		bbcode_parse_tree_array_p close, bstring open_string, int tagId,
+		bbcode_parse_tree_array_p close, bstring open_string, int tag_id,
 		bstring argument) {
-	/* TODO Implement */
+	bbcode_parse_tree_p tmp_tree;
+	/* Tree creation */
+	tmp_tree=bbcode_tree_create();
+	tmp_tree->tag_id=tag_id;
+	tmp_tree->flags=BBCODE_TREE_FLAGS_MULTIPART_FIRST_NODE;
+	tmp_tree->open_string=open_string;
+	tmp_tree->argument= argument;
+	tmp_tree->parent_node=bbcode_array_element(work,bbcode_array_length(work)-1);
+
+	/* Adding tree to complete structure */
+	bbcode_tree_check_child_size(tree, tmp_tree->parent_node->childs.size+1);
+	tmp_tree->parent_node->childs.element[tree->childs.size]->tree=tmp_tree;
+	tmp_tree->parent_node->childs.element[tree->childs.size]->type
+			=BBCODE_TREE_CHILD_TYPE_TREE;
+	tmp_tree->parent_node->childs.size++;
 }
 
 /* adds a child to the current list (string_leaf) */
 void bbcode_tree_push_string_child(bbcode_parse_tree_p tree, bstring string) {
 	bbcode_tree_check_child_size(tree, tree->childs.size+1);
 	tree->childs.element[tree->childs.size]->string=string;
+	tree->childs.element[tree->childs.size]->type=BBCODE_TREE_CHILD_TYPE_STRING;
 	tree->childs.size++;
 }
 
@@ -904,27 +1029,30 @@ void bbcode_tree_insert_child_at(bbcode_parse_tree_p tree,
 
 /* Mark an element closed, (and also multipart elements) */
 void bbcode_tree_mark_element_closed(bbcode_parse_tree_p tree) {
+	int i;
 	tree->flags |=BBCODE_TREE_FLAGS_PAIRED;
 	if (tree->flags & BBCODE_TREE_FLAGS_MULTIPART) {
-		/* TODO Multipart Code */
+		for (i=0; i< tree->multiparts->size; i++) {
+			tree->multiparts->element[i]->flags |= BBCODE_TREE_FLAGS_PAIRED;
+		}
 	}
 }
 
 /* Move a child set from a parent to another */
 void bbcode_tree_move_childs(bbcode_parse_tree_p from, bbcode_parse_tree_p to,
 		int offset_from, int count, int offset_to) {
-	bbcode_parse_child_p start, stop;
+	bbcode_parse_tree_child_p start, stop;
 	bbcode_tree_check_child_size(to, to->childs.size+count);
 	/* We First Move the current childs to leave space */
 	memmove(to->childs.element[offset_to+count], to->childs.element[offset_to],
-			sizeof(bbcode_parse_child_p)*(to->childs.size-offset_to));
+			sizeof(bbcode_parse_tree_child_p)*(to->childs.size-offset_to));
 	/* Copying Childs From Old Position to new */
 	memcpy(to->childs.element[offset_to], from->childs.element[offset_from],
-			count * sizeof(bbcode_parse_child_p));
+			count * sizeof(bbcode_parse_tree_child_p));
 	/* Reducing Child Set In From Elements */
 	memmove(from->childs.element[offset_from],
 			from->childs.element[offset_from+count],
-			sizeof(bbcode_parse_child_p) * (from->childs.size-offset_from));
+			sizeof(bbcode_parse_tree_child_p) * (from->childs.size-offset_from));
 	/* Setting the sizes to correct values */
 	to->childs.size+=count;
 	from->childs.size-=count;
@@ -987,6 +1115,9 @@ void bbcode_parse_drop_element_at(bbcode_parse_tree_array_p stack, int index) {
 	}
 }
 
+void main() {
+
+}
 /*---------------------------
  Built-in callbacks
  ---------------------------*/
