@@ -1,5 +1,4 @@
 <?php
-ob_start();
 /**
  * BBCode Library
  *
@@ -579,12 +578,14 @@ Class BBCode{
 	 * @return array
 	 */
 	private function correct_tree(&$tree=null,$parent=0,$force_false=false){
+		/* Getting all options localy to use local symbol table */
 		$restore_tree=false;
 		if (is_null($tree)){
 			$tree =& $this->tree;
 			$restore_tree=true;
 		}
 		$ac=$this->auto_correct;
+		/* Starting new tree for corrected version */
 		$new_tree=array();
 		$tag=$this->tagListCache[$tree['i']];
 		if (!in_array($parent,$tag[5])){
@@ -777,14 +778,14 @@ Class BBCode{
 			if ($cb=$this->get_callback($tree['i'],false)){
 				$string=$cb($string,$arg);
 			}
-			/* Replacing {ARG} par $arg et {CONTENT} par $string */
+			/* Replacing {ARG} by $arg and {CONTENT} by $string in arg & start */
 			$arg =str_replace("{CONTENT}",$string,$arg);
 			if ($tag[13]){
 				$start=str_replace("{CONTENT}",$string,$start);
 				$start=str_replace("{ARG}",$arg,$start);
 			}
 
-			/* Replacing {ARG} par $arg et {CONTENT} par $string */
+			/* Replacing {ARG} by $arg in string & end */
 			$string =str_replace("{ARG}",$arg,$string);
 			if ($tag[14]){
 				$end=str_replace("{ARG}",$arg,$end);

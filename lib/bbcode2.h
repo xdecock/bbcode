@@ -7,7 +7,7 @@
  * See also: Hosted on pecl: http://pecl.php.net/
  * Leave this header As Is, add your name as maintainer, and please, contribute
  * enhancement back to the community
- * Revision : $Rev$
+ * Revision : $Id$
  */
 #ifndef BBCODE_H_
 #define BBCODE_H_
@@ -62,13 +62,14 @@
 #define BBCODE_TREE_FLAGS_MULTIPART_LAST_NODE 0x8
 #define BBCODE_TREE_FLAGS_MULTIPART_DONE 0x10
 #define BBCODE_TREE_FLAGS_ROOT 0x20
-#define BBCODE_TREE_ROOT_TAGID -2
+#define BBCODE_TREE_ROOT_TAGID -1
+
+#define BBCODE_ERR -2
 
 #define bbcode_get_bbcode(parser, pos)      ((parser)->bbcodes->bbcodes->element[(pos)])
 #define bbcode_get_cn(parser)               ((parser)->current_node)
 #define bbcode_array_length(array)          (((array) == (void *)0 || (array)->size < 0) ? (int)0 : ((int)(array)->size))
 #define bbcode_array_element(array, pos)    ((((unsigned)(pos)) < (unsigned)bbcode_array_length(array)) ? ((array)->element[(pos)]) : NULL)
-#define BBCODE_ERR -2
 #define bbcode_find_next(to_update,string,offset,char) if (to_update <= offset){ if (0>(to_update = bstrchrp( string, char, offset))){ to_update = blength( string )+5; } }
 #define BBCODE_SPECIAL_CASE_NO_CHILD(argument) {\
     bstring close_tag=blk2bstr("[/",blength(tag)+4); \
@@ -193,6 +194,8 @@ struct _bbcode_parser {
 	bbcode_smiley_list_p smileys;
 	bbcode_list_p bbcodes;
 	bbcode_parse_tree_p current_node;
+	bstring content_replace;
+	bstring arg_replace;
 	int options;
 };
 
@@ -206,6 +209,7 @@ struct _bbcode_parse_tree {
 	bbcode_parse_tree_p parent_node;
 	bstring open_string;
 	bstring close_string;
+	bstring argument;
 };
 
 /* This is a single token found by parsing (in fact a token is often splitted with partial matches) */
@@ -284,7 +288,7 @@ void bbcode_apply_rules(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 int bbcode_get_tag_id(bbcode_parser_p parser, bstring value, int has_arg);
 
 /* Translate Smileys */
-void void bbcode_parse_smileys(bstring string, bbcode_smiley_list_p list);
+void bbcode_parse_smileys(bstring string, bbcode_smiley_list_p list);
 
 /*---------------------------
  Smiley Manipulation API
@@ -380,7 +384,7 @@ void bbcode_tree_check_child_size(bbcode_parse_tree_p tree, int size);
 /* adds a child to the current list (sub_tree) */
 void bbcode_tree_push_tree_child(bbcode_parser_p parser,
 		bbcode_parse_tree_p tree, bbcode_parse_tree_array_p work,
-		bbcode_parse_tree_array_p close, bstring open_string, int tagId,
+		bbcode_parse_tree_array_p close, bstring open_string, int tag_id,
 		bstring argument);
 
 /* adds a child to the current list (string_leaf) */
