@@ -580,52 +580,68 @@ Class BBCode{
 	private function correct_tree(&$tree=null,$parent=0,$force_false=false){
 		/* Getting all options localy to use local symbol table */
 		$restore_tree=false;
+		/* Fetching tree if using object internal tree */
 		if (is_null($tree)){
 			$tree =& $this->tree;
 			$restore_tree=true;
 		}
+		/* fetch auto_correct localy */
 		$ac=$this->auto_correct;
 		/* Starting new tree for corrected version */
 		$new_tree=array();
+		/* fetch tag localy */
 		$tag=$this->tagListCache[$tree['i']];
+		/* Check if parent is in parent_allow_list */
 		if (!in_array($parent,$tag[5])){
 			$force_false=true;
 		}
 		if ($force_false){
+			/* if force_false is enabled, unpair tags */
 			$tree['p']=false;
-		}
-		if (isset($tree['i']) && $tag[4]&BBCode::FLAGS_ONE_OPEN_PER_LEVEL){
+		} elseif (isset($tree['i']) && $tag[4]&BBCode::FLAGS_ONE_OPEN_PER_LEVEL){
+			/* If this tag has the special flag ONE_OPEN_PER_LEVEL, force pairing */ 
 			$tree['p']=true;
 		}
 		if (!$ac && !$tree['p']){
+			/* If no auto_correction neither pairing, force false */
 			$force_false=true;
 		}
+		/* Fetch the parent, according to force_false setting */
 		$orig_parent=$parent;
 		$parent=$force_false?$parent:$tree['i'];
+		/* If some elements has some conditions over other elements */
 		if (isset($tree['cond'])){
+			/* searching trough conditions lists */
 			foreach ($tree['cond'] as $element){
 				if (!$element['p']){
 					continue;
 				} else {
+					/* If one condition is paired, this element can not exists */
 					$tree['p']=false;
 				}
 			}
 		}
+		/* Forcing child_list presence */
 		if (!isset($tree['c'])){
 			$tree['c']= array();
 		}
+		/* Browsing child_list for corrections */
 		for($i=0; $i<count($tree['c']);++$i){
 			$child =& $tree['c'][$i];
+			/* Subtree */
 			if (is_array($child)){
+				/* If the child is a multipart and not done */
 				if (isset($child['mp']) && !$child['d']){
 					//Multipart Child
 					foreach($child['mp'] as $child_part){
+						/* TODO Comments */
 						if (is_array($child_part)){
 							if (!isset($child_part['i'])){
 								continue;
 							}
+							/* If one child has parents and if one parent is unpaired mark as unpaired */
 							if (isset($child_part['par'])){
-								for($j=0;$j<$child_part['par'];++$j){
+								for($j=0;$j<count($child_part['par']);++$j){
 									if ($child_part['par'][$j]['p']){
 										continue;
 									}
@@ -633,6 +649,8 @@ Class BBCode{
 									break;
 								}
 							} else {
+								/* Check for mutual inclusion as child else, mark as unpaired */
+								/* TODO: Check if the original way was not parent / child checking */ 
 								if (in_array($child_part['i'],$this->tagListCache[$parent][6])){
 									if (in_array($parent,$this->tagListCache[$child_part['i']][6])){
 										continue;
@@ -643,40 +661,59 @@ Class BBCode{
 							}
 						}
 					}
+					/* Mark Child as done */
 					$child['d']=true;
+					/* If no autocorrection & unpaired */
 					if (!$ac && !$tree['p']){
+						/* Force False */
 						$force_false=true;
 					}
+					/* Get Parent for allow_list resolv */
 					$parent=$force_false?$orig_parent:$tree['i'];
+					/* Checking allow_list */
 					if (in_array($child['i'], $this->tagListCache[$parent][6])){
+						/* The tag can be a subelement of this one */
 						$return =& $this->correct_tree($child, $parent, false);
 					} else {
+						/* The tag can not be a subelement of this one */
 						$return =& $this->correct_tree($child, $parent, true);
 					}
 				} elseif (in_array($child['i'], $this->tagListCache[$parent][6])){
+					/* The tag can be a subelement of this one */
 					$return =& $this->correct_tree($child, $parent, false);
 				} else {
+					/* The tag cannot be a subelement of this one */
 					$return =& $this->correct_tree($child, $parent, true);
 				}
+				/* Appending return(s) to new_tree */
 				array_splice($new_tree, count($new_tree), 0, $return);
 			} else {
+				/* String */
 				$new_tree[] =& $child;
 			}
 		}
 		if (!$force_false && ($tree['p'] || $ac)){
+			/* If tree is correct or autocorrection is ON */
+			/* Replace Child List with corrected one */
 			$tree['c'] =& $new_tree;
 			// Multipart_Join
+			/* Return data */
 			if ($restore_tree){
 				$this->tree =& $tree;
 			} else {
 				return array(&$tree);
 			}
 		} else {
+			/* If force false or no autocorrection and unpaired tag */
 			if ($force_false){
+				/* If force false flag is set, force unpair */
 				$tree['p']=false;
 			}
+			/* prepend the current open String to corrected Child_list */
 			array_unshift($new_tree,$tree['s']);
+			/* append the closing string to corrected child list */
 			$new_tree[] =& $tree['cs'];
+			/* Return data */
 			if ($restore_tree){
 				$tree['c'] =& $new_tree;
 			} else {
