@@ -66,7 +66,7 @@
 
 #define BBCODE_ERR -2
 
-#define bbcode_get_bbcode(parser, pos)      ((parser)->bbcodes->bbcodes->element[(pos)])
+#define bbcode_get_bbcode(parser, pos)      ((pos==-1)?(parser)->bbcodes->root : (parser)->bbcodes->bbcodes->element[(pos)])
 #define bbcode_get_cn(parser)               ((parser)->current_node)
 #define bbcode_array_length(array)          (((array) == (void *)0 || (array)->size < 0) ? (int)0 : ((int)(array)->size))
 #define bbcode_array_element(array, pos)    ((((unsigned)(pos)) < (unsigned)bbcode_array_length(array)) ? ((array)->element[(pos)]) : NULL)
@@ -84,6 +84,20 @@
         end=next_close=sc_offset+blength(close_tag); \
     } \
     bdestroy(close_tag); \
+}
+#define bbcode_apply_flag_to_parts(multipart, flag, add) { \
+	int i; \
+	if (multipart!=NULL) { \
+		if (add) { \
+			for (i=0; i<multipart->size; i++) { \
+				multipart->element[i]->flags |= flag; \
+			} \
+		} else { \
+			for (i=0; i<multipart->size; i++) { \
+				multipart->element[i]->flags &= ~flag; \
+			} \
+		} \
+	} \
 }
 
 typedef struct _bbcode_smiley bbcode_smiley;
@@ -242,9 +256,12 @@ void bbcode_parser_set_arg_parser(bbcode_parser_p parser,
 
 /* Constructs and add a bbcode_element to the parser */
 void bbcode_parser_add_ruleset(bbcode_parser_p parser, char type, char flags,
+		char *tag, int tag_size,
 		char *open_tag, int open_tag_size, char *close_tag, int close_tag_size,
 		char *default_arg, int default_arg_size, char *parent_list,
-		int parent_list_size, char *child_list, int child_list_size, int (*param_handling_func)(bstring content, bstring param, void *func_data), int (*content_handling_func)(bstring content, bstring param, void *func_data),
+		int parent_list_size, char *child_list, int child_list_size, 
+		int (*param_handling_func)(bstring content, bstring param, void *func_data), 
+		int (*content_handling_func)(bstring content, bstring param, void *func_data),
 		void *param_handling_func_data, void *content_handling_func_data);
 
 /* Construct and add a smiley to the parser */
@@ -277,7 +294,7 @@ void bbcode_close_tag(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 		int tag_id, bstring close_string, int true_close);
 
 /* This make some basic corrections to a given tree */
-void bbcode_correct_tree(bbcode_parser_p parser, bbcode_parse_tree_p tree,
+int bbcode_correct_tree(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 		int parent_id, char force_false);
 
 /* This apply the BBCode rules to generate the final string */
@@ -430,6 +447,18 @@ void bbcode_parse_stack_pop_element_loose(bbcode_parse_tree_array_p stack);
 
 /* Remove element from the Tree array @ index */
 void bbcode_parse_drop_element_at(bbcode_parse_tree_array_p stack, int index);
+
+/* Init a tree child */
+bbcode_parse_tree_child_p bbcode_tree_child_create(){
+	bbcode_parse_tree_child_p child;
+	child=(bbcode_parse_tree_child_p)malloc(sizeof(bbcode_parse_tree_child));
+	return child;
+}
+
+/* Free a tree child */
+void bbcode_tree_child_destroy(bbcode_parse_tree_child_p child){
+	free(child);
+}
 
 /*---------------------------
  Built-in callbacks

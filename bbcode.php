@@ -699,7 +699,7 @@ Class BBCode{
 			// Multipart_Join
 			/* Return data */
 			if ($restore_tree){
-				$this->tree =& $tree;
+				$tree['c'] =& $new_tree;
 			} else {
 				return array(&$tree);
 			}
@@ -715,7 +715,7 @@ Class BBCode{
 			$new_tree[] =& $tree['cs'];
 			/* Return data */
 			if ($restore_tree){
-				$tree['c'] =& $new_tree;
+				$this->tree =& $new_tree;
 			} else {
 				return $new_tree;
 			}
