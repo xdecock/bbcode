@@ -71,20 +71,19 @@
 #define bbcode_array_length(array)          (((array) == (void *)0 || (array)->size < 0) ? (int)0 : ((int)(array)->size))
 #define bbcode_array_element(array, pos)    ((((unsigned)(pos)) < (unsigned)bbcode_array_length(array)) ? ((array)->element[(pos)]) : NULL)
 #define bbcode_find_next(to_update,string,offset,char) if (to_update <= offset){ if (0>(to_update = bstrchrp( string, char, offset))){ to_update = blength( string )+5; } }
-#define BBCODE_SPECIAL_CASE_NO_CHILD(argument) {\
-    bstring close_tag=blk2bstr("[/",blength(tag)+4); \
+#define BBCODE_SPECIAL_CASE_NO_CHILD(argument) \
+    bstring close_tag=bfromcstr("[/"); \
     bconcat(close_tag,tag); \
     bcatcstr(close_tag,"]"); \
     int sc_offset=binstrcaseless(string, next_close, close_tag); \
     if (sc_offset!=BSTR_ERR){ \
-        bbcode_tree_push_tree_child(parser, tree, work_stack, close_stack, bmidstr(string, offset, end-offset+1),tag_id, argument); \
-        bbcode_tree_push_string_child(tree, bmidstr(string,next_close+1,sc_offset-next_close-1)); \
-        bbcode_close_tag(parser, tree, work_stack, close_stack, tag_id, bmidstr(string, sc_offset, blength(close_tag)),0); \
+        bbcode_tree_push_tree_child(parser, bbcode_get_cn(parser), work_stack, close_stack, bmidstr(string, offset, end-offset+1),tag_id, argument); \
+        bbcode_tree_push_string_child(bbcode_get_cn(parser), bmidstr(string,next_close+1,sc_offset-next_close-1)); \
+        bbcode_close_tag(parser, bbcode_get_cn(parser), work_stack, close_stack, tag_id, bmidstr(string, sc_offset, blength(close_tag)),1); \
         added=1; \
-        end=next_close=sc_offset+blength(close_tag); \
+        end=next_close=sc_offset+blength(close_tag)-1; \
     } \
-    bdestroy(close_tag); \
-}
+    bdestroy(close_tag);
 #define bbcode_apply_flag_to_parts(multipart, flag, add) { \
 	int i; \
 	if (multipart!=NULL) { \

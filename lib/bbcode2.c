@@ -27,7 +27,7 @@ bbcode_parser_p bbcode_parser_create() {
 	parser->smileys=bbcode_smileys_list_create();
 	parser->argument_parser=NULL;
 	parser->content_replace = bfromcstr("{CONTENT}");
-	parser->arg_replace = bfromcstr("{ARG}");
+	parser->arg_replace = bfromcstr("{PARAM}");
 	return parser;
 }
 
