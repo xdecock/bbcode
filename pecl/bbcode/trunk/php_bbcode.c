@@ -25,7 +25,6 @@
 #include "ext/standard/info.h"
 #include "php_bbcode.h"
 #include "lib/bbcode2.h"
-#include "lib/stacklib.h"
 #include "lib/bstrlib.h"
 
 typedef struct _bbcode_object {
@@ -119,7 +118,7 @@ int _php_bbcode_handling_content(bstring content, bstring param, void *datas){
 	if (retval) {
 		convert_to_string_ex(&retval);
 		if(Z_STRLEN_P(retval)){
-			bassigncstr(content,Z_STRVAL_P(retval));
+			bassignblk(content,Z_STRVAL_P(retval), Z_STRLEN_P(retval));
 		} else {
 			bdelete(content,0,param->slen);
 		}
@@ -172,7 +171,7 @@ int _php_bbcode_handling_param(bstring content, bstring param, void *datas){
 	if (retval) {
 		convert_to_string_ex(&retval);
 		if(Z_STRLEN_P(retval)){
-			bassigncstr(param,Z_STRVAL_P(retval));
+			bassignblk(param,Z_STRVAL_P(retval), Z_STRLEN_P(retval));
 		} else {
 			bdelete(param,0,param->slen);
 		}
@@ -475,7 +474,9 @@ PHP_FUNCTION(bbcode_parse)
 	/* converting string for bbcode_parse_string usage */
 	ret_string=bbcode_parse(parser, string, str_len, &ret_size);
 	
-	RETVAL_STRINGL(ret_string, ret_size ,0);
+	RETVAL_STRINGL(ret_string, ret_size ,1);
+	efree(string);
+	free(ret_string);
 }
 /* }}} */
 /*** Module Infos ***/

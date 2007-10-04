@@ -1,22 +1,15 @@
 TODO Version $Id$
 
 -- Callback --
-* Make use of fast_call_user_function() in callback in order to make it more
-  efficient.
-* Enable Object Oriented Callbacks
 * Prepare some built-in callbacks
   
--- Interface --
+-- PHP Interface --
 * Implements an inheritable object interface (dunno who will inherit, but
   i think there can't be a problem with it)
 * Drop the Bstrlib Dependency by Using PHP Internal String manipulation
   facilities
 
--- Limitations --
-* Drop the BBCODE_MAX_CODES limitation
-
 -- Code Cleanup & Documentation --
 * Provide Better Documentation for the bbcode lib
 * Try to remove duplicates code sections
-* Use consistent Comment Language (Not English & French)
 * Move Unecessary Loop operations outside a loop
