@@ -66,7 +66,7 @@
 
 #define BBCODE_ERR -2
 
-#define bbcode_get_bbcode(parser, pos)      ((pos==-1)?(parser)->bbcodes->root : (parser)->bbcodes->bbcodes->element[(pos)])
+#define bbcode_get_bbcode(parser, pos)      ((pos == BBCODE_TREE_ROOT_TAGID)?(parser)->bbcodes->root : (parser)->bbcodes->bbcodes->element[(pos)])
 #define bbcode_get_cn(parser)               ((parser)->current_node)
 #define bbcode_array_length(array)          (((array) == (void *)0 || (array)->size < 0) ? (int)0 : ((int)(array)->size))
 #define bbcode_array_element(array, pos)    ((((unsigned)(pos)) < (unsigned)bbcode_array_length(array)) ? ((array)->element[(pos)]) : NULL)
@@ -76,7 +76,7 @@
     bconcat(close_tag,tag); \
     bcatcstr(close_tag,"]"); \
     int sc_offset=binstrcaseless(string, next_close, close_tag); \
-    if (sc_offset<0){ \
+    if (sc_offset!=BSTR_ERR){ \
         bbcode_tree_push_tree_child(parser, tree, work_stack, close_stack, bmidstr(string, offset, end-offset+1),tag_id, argument); \
         bbcode_tree_push_string_child(tree, bmidstr(string,next_close+1,sc_offset-next_close-1)); \
         bbcode_close_tag(parser, tree, work_stack, close_stack, tag_id, bmidstr(string, sc_offset, blength(close_tag)),0); \
@@ -449,16 +449,10 @@ void bbcode_parse_stack_pop_element_loose(bbcode_parse_tree_array_p stack);
 void bbcode_parse_drop_element_at(bbcode_parse_tree_array_p stack, int index);
 
 /* Init a tree child */
-bbcode_parse_tree_child_p bbcode_tree_child_create(){
-	bbcode_parse_tree_child_p child;
-	child=(bbcode_parse_tree_child_p)malloc(sizeof(bbcode_parse_tree_child));
-	return child;
-}
+bbcode_parse_tree_child_p bbcode_tree_child_create();
 
 /* Free a tree child */
-void bbcode_tree_child_destroy(bbcode_parse_tree_child_p child){
-	free(child);
-}
+void bbcode_tree_child_destroy(bbcode_parse_tree_child_p child);
 
 /*---------------------------
  Built-in callbacks

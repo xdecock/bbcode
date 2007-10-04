@@ -12,9 +12,10 @@ $arrayBBCode=array(
     'i'=>        array('type'=>BBCODE_TYPE_NOARG, 'open_tag'=>'<i>',
                     'close_tag'=>'</i>', 'childs'=>'b'),
     'url'=>      array('type'=>BBCODE_TYPE_OPTARG,
-                    'open_tag'=>'<a href="{PARAM}">', 'close_tag'=>'</a>',
-                    'default_arg'=>'{CONTENT}'
-                    'childs'=>'bi'),
+                    'open_tag'=>'<a href="{ARG}">',
+                    'close_tag'=>'</a>',
+                    'default_arg'=>'{CONTENT}',
+                    'childs'=>'b,i'),
     'img'=>      array('type'=>BBCODE_TYPE_NOARG,
                     'open_tag'=>'<img src="', 'close_tag'=>'" />',
                     'childs'=>''),
@@ -35,7 +36,7 @@ $BBHandler=bbcode_create($arrayBBCode);
 echo bbcode_parse($BBHandler,$text);
 --EXPECT--
 <b>Bold Text</b>
-<i>Italic Text</i>
+[i]Italic Text[/i]
 <a href="http://www.php.net/">http://www.php.net/</a>
 <a href="http://pecl.php.net/"><b>Content Text</b></a>
 <img src="http://static.php.net/www.php.net/images/php.gif" />
