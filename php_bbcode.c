@@ -40,6 +40,7 @@ static function_entry bbcode_functions[] = {
 	PHP_FE(bbcode_parse, NULL)
 	PHP_FE(bbcode_add_smiley, NULL)
 	PHP_FE(bbcode_set_flags, NULL)
+	PHP_FE(bbcode_set_arg_parser, NULL)
 	{NULL, NULL, NULL}
 };
 
@@ -576,6 +577,25 @@ PHP_FUNCTION(bbcode_set_flags)
 			
 	}
    	
+	RETURN_BOOL(SUCCESS);
+}
+/* }}} */
+/* {{{ proto boolean bbcode_set_arg_parser(ressource bbcode_container, ressource bbcode_child)
+   Sets a bbcode_argument_parser */
+PHP_FUNCTION(bbcode_set_arg_parser)
+{
+	zval *z_bbcode_parser;
+	zval *z_bbcode_parser_child;
+	bbcode_parser_p parser=NULL;
+	bbcode_parser_p arg_parser=NULL;
+	
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rr", &z_bbcode_parser, &z_bbcode_parser_child) == FAILURE) {
+        RETURN_NULL();
+    }
+	ZEND_FETCH_RESOURCE(parser, bbcode_parser_p, &z_bbcode_parser, -1, PHP_BBCODE_RES_NAME, le_bbcode);
+	ZEND_FETCH_RESOURCE(arg_parser, bbcode_parser_p, &z_bbcode_parser_child, -1, PHP_BBCODE_RES_NAME, le_bbcode);
+	
+   	bbcode_parser_set_arg_parser(parser, arg_parser);
 	RETURN_BOOL(SUCCESS);
 }
 /* }}} */
