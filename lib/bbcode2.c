@@ -157,6 +157,7 @@ int bbcode_parser_get_flags(bbcode_parser_p parser) {
 /* Set options for the bbcode_parser */
 void bbcode_parser_set_flags(bbcode_parser_p parser, int flags) {
 	parser->options=flags;
+	parser->bbcodes->options &= ~BBCODE_LIST_IS_READY;
 }
 
 /* ----------------------------*
@@ -694,21 +695,34 @@ int bbcode_correct_tree(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 				}
 			}
 			if (ret){
+				int offset=0;
+				int offset_start=0;
 				bbcode_parse_tree_p tmp_tree=bbcode_tree_create();
 				/* Removes the child */
 				bbcode_tree_move_childs( tree, tmp_tree, i, 1, 0);
 				/* Add Closing String */
-				bbcode_tree_push_string_child(tmp_tree, child_tree->close_string);
+				if (blength(child_tree->close_string)) {
+					bbcode_tree_push_string_child(tmp_tree, child_tree->close_string);
+					bbcode_tree_move_childs( tmp_tree, tree, 1, 1, i);
+					offset++;
+				} else {
+					bdestroy(child_tree->close_string);
+				}
 				child_tree->close_string= NULL;
-				bbcode_tree_move_childs( tmp_tree, tree, 1, 1, i);
 				/* Prepend Opening String */
-				bbcode_tree_push_string_child(tmp_tree, child_tree->open_string);
+				if (blength(child_tree->open_string)){
+					bbcode_tree_push_string_child(tmp_tree, child_tree->open_string);
+					bbcode_tree_move_childs( tmp_tree, tree, 1, 1, i);
+					offset++;
+					offset_start++;
+				} else {
+					bdestroy(child_tree->open_string);
+				}
 				child_tree->open_string= NULL;
-				bbcode_tree_move_childs( tmp_tree, tree, 1, 1, i);
 				/* move elements from child to tree */
-				bbcode_tree_move_childs( child_tree, tree, 0 , child_tree->childs.size, i+1);
+				bbcode_tree_move_childs( child_tree, tree, 0 , child_tree->childs.size, i+offset_start);
 				/* Add child_tree.size+i to i */
-				i+=(child_tree->childs.size) + 1;
+				i+=(child_tree->childs.size) + offset-1;
 				bbcode_tree_free(tmp_tree);
 			}
 		}
@@ -747,7 +761,8 @@ void bbcode_apply_rules(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 			int j;
 			for (j=i+1; j < tree->childs.size; j++){
 				/* Only treat tree elements */
-				if ((tree->childs.element[j])->type==BBCODE_TREE_CHILD_TYPE_TREE){
+				bbcode_parse_tree_child_p tmp_child=(tree->childs.element[j]);
+				if ((tmp_child)->type==BBCODE_TREE_CHILD_TYPE_TREE){
 					/* If next tree is not multipart, no mergin possible */
 					if (tree->flags & BBCODE_TREE_FLAGS_MULTIPART){
 						/* Same Multipart element */
@@ -1262,8 +1277,17 @@ void bbcode_tree_free(bbcode_parse_tree_p tree) {
 	if (tree->close_string != NULL) {
 		bdestroy(tree->close_string);
 	}
-	if (tree->multiparts != NULL && tree->flags & BBCODE_TREE_FLAGS_MULTIPART_FIRST_NODE) {
-		bbcode_parse_stack_free(tree->multiparts);
+	if (tree->multiparts != NULL) {
+		if (tree->multiparts->size==1){
+			bbcode_parse_stack_free(tree->multiparts);
+		} else {
+			for (i=0; i<tree->multiparts->size; i++){
+				if (tree->multiparts->element[i] == tree){
+					bbcode_parse_drop_element_at(tree->multiparts,i);
+					break;
+				}
+			}
+		}
 	}
 	if (tree->conditions != NULL) {
 		bbcode_parse_stack_free(tree->conditions);
@@ -1388,6 +1412,9 @@ void bbcode_tree_move_childs(bbcode_parse_tree_p from, bbcode_parse_tree_p to,
 	/* Copying Childs From Old Position to new */
 	for ( i = 0; i < count; i++) {
 		to->childs.element[ offset_to + i ] = from->childs.element[ offset_from + i ];
+		if ((to->childs.element[ offset_to + i ])->type == BBCODE_TREE_CHILD_TYPE_TREE){
+			(to->childs.element[ offset_to + i ])->tree->parent_node = to;
+		}
 	}
 	/* Reducing Child Set In From Elements */
 	for (i = offset_from; i <= from->childs.size - count ; i++) {
@@ -1452,8 +1479,10 @@ void bbcode_parse_stack_pop_element_loose(bbcode_parse_tree_array_p stack) {
 void bbcode_parse_drop_element_at(bbcode_parse_tree_array_p stack, int index) {
 	if (index<stack->size) {
 		stack->size--;
-		memmove(&(stack->element[index]), &(stack->element[index+1]), (stack->size
-				-index)*sizeof(bbcode_parse_tree_p));
+		int i;
+		for(i=index;i<stack->size;i++){
+			stack->element[i]=stack->element[i+1];
+		}
 	}
 }
 
