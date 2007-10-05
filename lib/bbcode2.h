@@ -27,6 +27,7 @@
 #define BBCODE_FLAGS_SMILEYS_ON         0x4
 #define BBCODE_FLAGS_SMILEYS_OFF        0x8
 #define BBCODE_FLAGS_ONE_OPEN_PER_LEVEL 0x10
+#define BBCODE_FLAGS_REMOVE_IF_EMPTY	0x20
 
 #define BBCODE_ARG_NO_QUOTE        0x0
 #define BBCODE_ARG_DOUBLE_QUOTE    0x1
@@ -174,7 +175,7 @@ struct _bbcode_allow_list {
 /* This represent a BBCode Tag Rule Set */
 struct _bbcode {
 	char type;
-	char flags;
+	int flags;
 	char speed_cache;
 	bstring tag;
 	bstring open_tag;
@@ -254,7 +255,7 @@ void bbcode_parser_set_arg_parser(bbcode_parser_p parser,
 		bbcode_parser_p arg_parser);
 
 /* Constructs and add a bbcode_element to the parser */
-void bbcode_parser_add_ruleset(bbcode_parser_p parser, char type, char flags,
+void bbcode_parser_add_ruleset(bbcode_parser_p parser, char type, int flags,
 		char *tag, int tag_size,
 		char *open_tag, int open_tag_size, char *close_tag, int close_tag_size,
 		char *default_arg, int default_arg_size, char *parent_list,
@@ -407,7 +408,7 @@ void bbcode_tree_push_tree_child(bbcode_parser_p parser,
 void bbcode_tree_push_string_child(bbcode_parse_tree_p tree, bstring string);
 
 /* adds a tree to the current list (raw) */
-void bbcode_tree_push_tree_raw(bbcode_parse_tree_p tree,
+void bbcode_tree_push_tree_raw(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 		bbcode_parse_tree_p tmp_tree, bbcode_parse_tree_array_p work);
 
 /* Get the last child and removes it from the list */

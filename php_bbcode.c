@@ -38,6 +38,8 @@ static function_entry bbcode_functions[] = {
 	PHP_FE(bbcode_add_element, NULL)
 	PHP_FE(bbcode_destroy, NULL)
 	PHP_FE(bbcode_parse, NULL)
+	PHP_FE(bbcode_add_smiley, NULL)
+	PHP_FE(bbcode_set_flags, NULL)
 	{NULL, NULL, NULL}
 };
 
@@ -183,13 +185,14 @@ int _php_bbcode_handling_param(bstring content, bstring param, void *datas){
 /* Fill a bbcode_container */
 static void _php_bbcode_add_element(bbcode_parser_p parser, char *tag_name, zval *content) {
 	zval **e;
-	char type, flags=0;
+	char type;
 	char *name;
 	char empty[]="";
 	char all[]="all";
 	int (*content_handling_func)(bstring content, bstring param, void *func_data)=NULL;
 	int (*param_handling_func)(bstring content, bstring param, void *func_data)=NULL;
     HashTable *ht;
+    int flags=0;
 	char *childs=all;
 	int childs_len=3;
 	char *parents=all;
@@ -303,13 +306,37 @@ ZEND_RSRC_DTOR_FUNC(php_bbcode_dtor)
 PHP_MINIT_FUNCTION(bbcode)
 {
     le_bbcode = zend_register_list_destructors_ex(php_bbcode_dtor, NULL, PHP_BBCODE_RES_NAME, module_number);
+	/* BBCODE Types */
 	REGISTER_LONG_CONSTANT("BBCODE_TYPE_NOARG",					BBCODE_TYPE_NOARG, CONST_CS|CONST_PERSISTENT);
 	REGISTER_LONG_CONSTANT("BBCODE_TYPE_SINGLE",				BBCODE_TYPE_SINGLE, CONST_CS|CONST_PERSISTENT);
 	REGISTER_LONG_CONSTANT("BBCODE_TYPE_ARG",					BBCODE_TYPE_ARG, CONST_CS|CONST_PERSISTENT);
 	REGISTER_LONG_CONSTANT("BBCODE_TYPE_OPTARG",				BBCODE_TYPE_OPTARG, CONST_CS|CONST_PERSISTENT);
 	REGISTER_LONG_CONSTANT("BBCODE_TYPE_ROOT",					BBCODE_TYPE_ROOT, CONST_CS|CONST_PERSISTENT);
+	/* BBCODE Flags */
 	REGISTER_LONG_CONSTANT("BBCODE_FLAGS_ARG_PARSING",			BBCODE_FLAGS_ARG_PARSING, CONST_CS|CONST_PERSISTENT);
 	REGISTER_LONG_CONSTANT("BBCODE_FLAGS_CDATA_NOT_ALLOWED",	BBCODE_FLAGS_CDATA_NOT_ALLOWED, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_FLAGS_SMILEYS_ON",			BBCODE_FLAGS_SMILEYS_ON, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_FLAGS_SMILEYS_OFF",			BBCODE_FLAGS_SMILEYS_OFF, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_FLAGS_ONE_OPEN_PER_LEVEL",	BBCODE_FLAGS_ONE_OPEN_PER_LEVEL, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_FLAGS_REMOVE_IF_EMPTY",		BBCODE_FLAGS_REMOVE_IF_EMPTY, CONST_CS|CONST_PERSISTENT);
+	/* Parsers Flags */
+	/* Quotes styles */
+	REGISTER_LONG_CONSTANT("BBCODE_ARG_NO_QUOTE",				BBCODE_ARG_NO_QUOTE, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_ARG_DOUBLE_QUOTE",			BBCODE_ARG_DOUBLE_QUOTE, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_ARG_SINGLE_QUOTE",			BBCODE_ARG_SINGLE_QUOTE, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_ARG_HTML_QUOTE",				BBCODE_ARG_HTML_QUOTE, CONST_CS|CONST_PERSISTENT);
+	/* Parsing Options */
+	REGISTER_LONG_CONSTANT("BBCODE_AUTO_CORRECT",				BBCODE_AUTO_CORRECT, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_CORRECT_REOPEN_TAGS",		BBCODE_CORRECT_REOPEN_TAGS, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_DISABLE_TREE_BUILD",			BBCODE_DISABLE_TREE_BUILD, CONST_CS|CONST_PERSISTENT);
+	/* Smileys Options */
+	REGISTER_LONG_CONSTANT("BBCODE_DEFAULT_SMILEYS_ON",			BBCODE_DEFAULT_SMILEYS_ON, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_DEFAULT_SMILEYS_OFF",		BBCODE_DEFAULT_SMILEYS_OFF, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_FORCE_SMILEYS_OFF",			BBCODE_FORCE_SMILEYS_OFF, CONST_CS|CONST_PERSISTENT);
+	/* FLAG SET / ADD / REMOVE */
+	REGISTER_LONG_CONSTANT("BBCODE_SET_FLAGS_SET",				0, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_SET_FLAGS_ADD",				1, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_SET_FLAGS_REMOVE",			2, CONST_CS|CONST_PERSISTENT);
     return SUCCESS;
 }
 /* END INIT/SHUTDOWN */
@@ -379,7 +406,7 @@ PHP_FUNCTION(bbcode_create)
     if (parser==NULL){
 		zend_error(E_ERROR, "[BBCode] (bbcode_create) Unable to allocate memory for tag_stack");
     }
-    bbcode_parser_set_flags(parser, BBCODE_AUTO_CORRECT|BBCODE_ARG_DOUBLE_QUOTE|BBCODE_ARG_SINGLE_QUOTE|BBCODE_ARG_HTML_QUOTE|BBCODE_ARG_NO_QUOTE);
+    bbcode_parser_set_flags(parser, BBCODE_AUTO_CORRECT|BBCODE_ARG_DOUBLE_QUOTE|BBCODE_ARG_SINGLE_QUOTE|BBCODE_ARG_HTML_QUOTE|BBCODE_ARG_NO_QUOTE|BBCODE_DEFAULT_SMILEYS_ON);
     /* If array given initialisation */
     if(bbcode_entry!=NULL){
 	    int i;
@@ -496,6 +523,63 @@ PHP_FUNCTION(bbcode_parse)
 	free(ret_string);
 }
 /* }}} */
+/* {{{ proto boolean bbcode_add_smiley(ressource bbcode_container, string find, string replace)
+   add a smiley find and replace ruleset */
+PHP_FUNCTION(bbcode_add_smiley)
+{
+	zval *z_bbcode_parser;
+	char *search, *replace;
+	int s_len, r_len;
+	bbcode_parser_p parser=NULL;
+	
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rss", &z_bbcode_parser, &search, &s_len, &replace, &r_len) == FAILURE) {
+        RETURN_NULL();
+    }
+    
+	ZEND_FETCH_RESOURCE(parser, bbcode_parser_p, &z_bbcode_parser, -1, PHP_BBCODE_RES_NAME, le_bbcode);
+	
+	bbcode_parser_add_smiley(parser, search, s_len, replace, r_len);
+   	
+	RETURN_BOOL(SUCCESS);
+}
+/* }}} */
+/* {{{ proto boolean bbcode_set_flags(ressource bbcode_container, int flag, int mode)
+   manage flags on parser using BBCODE_SET_FLAGS_* */
+PHP_FUNCTION(bbcode_set_flags)
+{
+	zval *z_bbcode_parser;
+	int new_flags;
+	int mode=0;
+	int flags;
+	bbcode_parser_p parser=NULL;
+	
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl|l", &z_bbcode_parser, &new_flags, &mode) == FAILURE) {
+        RETURN_NULL();
+    }
+    
+	ZEND_FETCH_RESOURCE(parser, bbcode_parser_p, &z_bbcode_parser, -1, PHP_BBCODE_RES_NAME, le_bbcode);
+	
+	flags=bbcode_parser_get_flags(parser);
+	switch (mode){
+		case 1:
+			bbcode_parser_set_flags(parser, flags | new_flags);
+			break;
+			
+		case 2:
+			bbcode_parser_set_flags(parser, flags & (~new_flags));
+			break;
+			
+		default:
+		case 0:
+			bbcode_parser_set_flags(parser, new_flags);
+			break;
+			
+	}
+   	
+	RETURN_BOOL(SUCCESS);
+}
+/* }}} */
+
 /*** Module Infos ***/
 PHP_MINFO_FUNCTION(bbcode)
 {
