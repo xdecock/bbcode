@@ -78,30 +78,29 @@ ZEND_GET_MODULE(bbcode)
 int _php_bbcode_handling_content(bstring content, bstring param, void *datas){
 	zval *retval = NULL;
 	zval ***zargs = NULL;
-	zval funcname;
+	zval **funcname;
 	int i, res;
 	char *callable = NULL, *errbuf=NULL;
-	funcname = *(zval *)datas;
+	funcname = ((zval **) datas);
 	TSRMLS_FETCH();
 
-	if (!zend_make_callable(&funcname, &callable TSRMLS_CC)) {
-		zend_error(E_WARNING, "[BBCode] (_php_bbcode_handling_content) function `%s' is not a function name",funcname);
+	if (!zend_is_callable(*funcname, 0, &callable TSRMLS_CC)) {
+		spprintf(&errbuf, 0, "function `%s' is not a function name", callable);
+		zend_error(E_WARNING, "[BBCode] (_php_bbcode_handling_content) %s", errbuf);
+		efree(errbuf);
 		efree(callable);
-		zval_dtor(&funcname);
 		return 0;
 	}
 
 	zargs = (zval ***)safe_emalloc((2), sizeof(zval **), 0);
 	zargs[0] = emalloc(sizeof(zval *));
 	MAKE_STD_ZVAL(*zargs[0]);
-	ZVAL_STRING(*zargs[0], bdata(content), 1);
+	ZVAL_STRINGL(*zargs[0], bdata(content), blength(content), 1);
 	zargs[1] = emalloc(sizeof(zval *));
 	MAKE_STD_ZVAL(*zargs[1]);
-	ZVAL_STRING(*zargs[1], bdata(param), 1);
+	ZVAL_STRINGL(*zargs[1], bdata(param), blength(param), 1);
 
-	res = call_user_function_ex(EG(function_table), NULL, &funcname, &retval, 2, zargs, 1, NULL TSRMLS_CC);
-
-	zval_dtor(&funcname);
+	res = call_user_function_ex(EG(function_table), NULL, *funcname, &retval, 2, zargs, 1, NULL TSRMLS_CC);
 
 	if (res == SUCCESS) {
 		if (zargs) {
@@ -112,15 +111,15 @@ int _php_bbcode_handling_content(bstring content, bstring param, void *datas){
 			efree(zargs);
 		}
 	} else {
-		zend_error(E_WARNING, "[BBCode] (_php_bbcode_handling_content) call_user_function_ex failed for function %s()",callable);
+		zend_error(E_WARNING, "[BBCode] (_php_bbcode_handling_content) call_user_function_ex failed for function %s()", callable);
 	}
 	efree(callable);
-	if (retval) {
+	if (&retval) {
 		convert_to_string_ex(&retval);
 		if(Z_STRLEN_P(retval)){
 			bassignblk(content,Z_STRVAL_P(retval), Z_STRLEN_P(retval));
 		} else {
-			bdelete(content,0,param->slen);
+			bdelete(content,0,blength(content));
 		}
 		zval_ptr_dtor(&retval);
 	}
@@ -131,30 +130,29 @@ int _php_bbcode_handling_content(bstring content, bstring param, void *datas){
 int _php_bbcode_handling_param(bstring content, bstring param, void *datas){
 	zval *retval = NULL;
 	zval ***zargs = NULL;
-	zval funcname;
+	zval **funcname;
 	int i, res;
 	char *callable = NULL, *errbuf=NULL;
+	funcname = ((zval **) datas);
 	TSRMLS_FETCH();
-	funcname = *(zval *)datas;
-	
-	if (!zend_make_callable(&funcname, &callable TSRMLS_CC)) {
-		zend_error(E_WARNING, "[BBCode] (_php_bbcode_handling_param) function `%s' is not a function name",callable);
+
+	if (!zend_is_callable(*funcname, 0, &callable TSRMLS_CC)) {
+		spprintf(&errbuf, 0, "function `%s' is not a function name", callable);
+		zend_error(E_WARNING, "[BBCode] (_php_bbcode_handling_param) %s", errbuf);
+		efree(errbuf);
 		efree(callable);
-		zval_dtor(&funcname);
 		return 0;
 	}
 
 	zargs = (zval ***)safe_emalloc((2), sizeof(zval **), 0);
 	zargs[0] = emalloc(sizeof(zval *));
 	MAKE_STD_ZVAL(*zargs[0]);
-	ZVAL_STRING(*zargs[0], bdata(content), 1);
+	ZVAL_STRINGL(*zargs[0], bdata(content), blength(content), 1);
 	zargs[1] = emalloc(sizeof(zval *));
 	MAKE_STD_ZVAL(*zargs[1]);
-	ZVAL_STRING(*zargs[1], bdata(param), 1);
+	ZVAL_STRINGL(*zargs[1], bdata(param), blength(param), 1);
 
-	res = call_user_function_ex(EG(function_table), NULL, &funcname, &retval, 2, zargs, 1, NULL TSRMLS_CC);
-
-	zval_dtor(&funcname);
+	res = call_user_function_ex(EG(function_table), NULL, *funcname, &retval, 2, zargs, 1, NULL TSRMLS_CC);
 
 	if (res == SUCCESS) {
 		if (zargs) {
@@ -165,15 +163,15 @@ int _php_bbcode_handling_param(bstring content, bstring param, void *datas){
 			efree(zargs);
 		}
 	} else {
-		zend_error(E_WARNING, "[BBCode] (_php_bbcode_handling_param) call_user_function_ex failed for function %s()",callable);
+		zend_error(E_WARNING, "[BBCode] (_php_bbcode_handling_param) call_user_function_ex failed for function %s()", callable);
 	}
 	efree(callable);
-	if (retval) {
+	if (&retval) {
 		convert_to_string_ex(&retval);
 		if(Z_STRLEN_P(retval)){
 			bassignblk(param,Z_STRVAL_P(retval), Z_STRLEN_P(retval));
 		} else {
-			bdelete(param,0,param->slen);
+			bdelete(param,0,blength(param));
 		}
 		zval_ptr_dtor(&retval);
 	}
@@ -186,6 +184,7 @@ int _php_bbcode_handling_param(bstring content, bstring param, void *datas){
 static void _php_bbcode_add_element(bbcode_parser_p parser, char *tag_name, zval *content) {
 	zval **e;
 	char type, flags=0;
+	char *name;
 	char empty[]="";
 	char all[]="all";
 	int (*content_handling_func)(bstring content, bstring param, void *func_data)=NULL;
@@ -198,8 +197,8 @@ static void _php_bbcode_add_element(bbcode_parser_p parser, char *tag_name, zval
 	char *open_tag, *close_tag, *default_arg;
 	int open_tag_len, close_tag_len, default_arg_len;
 	open_tag_len = close_tag_len = default_arg_len = 0;
-	zval *content_handling = NULL;
-	zval *param_handling = NULL;
+	zval **content_handling = NULL;
+	zval **param_handling = NULL;
 	
     if (Z_TYPE_P(content) == IS_ARRAY) {
         ht = HASH_OF(content);
@@ -236,18 +235,37 @@ static void _php_bbcode_add_element(bbcode_parser_p parser, char *tag_name, zval
 	} else {
 		default_arg = empty;
 	}
-	if ((SUCCESS == zend_hash_find(ht, "content_handling", sizeof("content_handling"), (void *) &e))
-			&& ((Z_TYPE_PP(e) == IS_STRING && Z_STRLEN_PP(e)) || (Z_TYPE_PP(e)==IS_ARRAY))) {
-		ZVAL_ADDREF(*e);
-		content_handling = *e;
+	if ((SUCCESS == zend_hash_find(ht, "content_handling", sizeof("content_handling"), (void *) &e))) {
+		if (Z_TYPE_PP(e) != IS_STRING && Z_TYPE_PP(e) != IS_ARRAY){
+			SEPARATE_ZVAL(e);
+			convert_to_string_ex(e);
+		}
+		if (!zend_is_callable(*e, 0, &name)) {
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "First argument is expected to be a valid callback, '%s' was given", name);
+			efree(name);
+			return;
+		}
+		efree(name);
+		content_handling = e;
+		ZVAL_ADDREF(*content_handling);
 		content_handling_func= _php_bbcode_handling_content;
 	} else {
 		content_handling=NULL;
 	}
 	if ((SUCCESS == zend_hash_find(ht, "param_handling", sizeof("param_handling"), (void *) &e))
 			&& ((Z_TYPE_PP(e) == IS_STRING && Z_STRLEN_PP(e)) || (Z_TYPE_PP(e)==IS_ARRAY))) {
-		ZVAL_ADDREF(*e);
-		param_handling = *e;
+		if (Z_TYPE_PP(e) != IS_STRING && Z_TYPE_PP(e) != IS_ARRAY){
+			SEPARATE_ZVAL(e);
+			convert_to_string_ex(e);
+		}
+		if (!zend_is_callable(*e, 0, &name)) {
+			php_error_docref(NULL TSRMLS_CC, E_WARNING, "First argument is expected to be a valid callback, '%s' was given", name);
+			efree(name);
+			return;
+		}
+		efree(name);
+		param_handling = e;
+		ZVAL_ADDREF(*param_handling);
 		param_handling_func= _php_bbcode_handling_param;
 	}
 	if ((SUCCESS == zend_hash_find(ht, "childs", sizeof("childs"), (void *) &e))
@@ -361,7 +379,7 @@ PHP_FUNCTION(bbcode_create)
     if (parser==NULL){
 		zend_error(E_ERROR, "[BBCode] (bbcode_create) Unable to allocate memory for tag_stack");
     }
-    bbcode_parser_set_flags(parser, BBCODE_AUTO_CORRECT|BBCODE_ARG_DOUBLE_QUOTE|BBCODE_ARG_SINGLE_QUOTE);
+    bbcode_parser_set_flags(parser, BBCODE_AUTO_CORRECT|BBCODE_ARG_DOUBLE_QUOTE|BBCODE_ARG_SINGLE_QUOTE|BBCODE_ARG_HTML_QUOTE|BBCODE_ARG_NO_QUOTE);
     /* If array given initialisation */
     if(bbcode_entry!=NULL){
 	    int i;
@@ -475,7 +493,6 @@ PHP_FUNCTION(bbcode_parse)
 	ret_string=bbcode_parse(parser, string, str_len, &ret_size);
 	
 	RETVAL_STRINGL(ret_string, ret_size ,1);
-	efree(string);
 	free(ret_string);
 }
 /* }}} */

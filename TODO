@@ -6,10 +6,12 @@ TODO Version $Id$
 -- PHP Interface --
 * Implements an inheritable object interface (dunno who will inherit, but
   i think there can't be a problem with it)
+* Expose the smiley API
 * Drop the Bstrlib Dependency by Using PHP Internal String manipulation
   facilities
 
 -- Code Cleanup & Documentation --
+* Provide ZVal onDestroy cleanup facilities
 * Provide Better Documentation for the bbcode lib
 * Try to remove duplicates code sections
 * Move Unecessary Loop operations outside a loop

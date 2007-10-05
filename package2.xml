@@ -29,9 +29,9 @@ http://pear.php.net/dtd/package-2.0.xsd">
     <active>yes</active>
   </lead>
 
-  <date>2007-10-04</date>
+  <date>2007-10-05</date>
   <version>
-    <release>0.10.0</release>
+    <release>0.10.1</release>
     <api>0.9.0</api>
   </version>
   <stability>
@@ -42,14 +42,13 @@ http://pear.php.net/dtd/package-2.0.xsd">
   <license uri="http://www.php.net/license">PHP License</license>
   
   <notes>
-  * Added Callback Support for objects
-  * Changed the parsing engine for a tree based parser
-  * Apparent Functionnalities should not be changed
-  * API changes should come shortly
-	New features to be exposed:
-	  - Tags automatic reopen, in order to produce
-		Valid HTML, consistent Visual output with invalid BBCode
-	  - Enhanced parser optionnal rules.
+	* Added Tests
+
+	* Corrected Callbacks Seg-Faults
+	* Removed Double Free
+	* Corrected Incorrect Results
+	* Corrected Arg Parsing
+	* Corrected Arg Quoting
   </notes>
 
   <contents>
@@ -75,6 +74,10 @@ http://pear.php.net/dtd/package-2.0.xsd">
         <file role='test' name='test_7.phpt'/>
         <file role='test' name='test_8.phpt'/>
         <file role='test' name='test_9.phpt'/>
+        <file role='test' name='test_10.phpt'/>
+        <file role='test' name='test_11.phpt'/>
+        <file role='test' name='test_12.phpt'/>
+        <file role='test' name='test_13.phpt'/>
       </dir>
     </dir>
   </contents>
