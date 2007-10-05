@@ -31,6 +31,7 @@ PHP_FUNCTION(bbcode_destroy);
 PHP_FUNCTION(bbcode_parse);
 PHP_FUNCTION(bbcode_add_smiley);
 PHP_FUNCTION(bbcode_set_flags);
+PHP_FUNCTION(bbcode_set_arg_parser);
 
 extern zend_module_entry bbcode_module_entry;
 #define phpext_bbcode_ptr &bbcode_module_entry;
