@@ -20,7 +20,7 @@
 #ifndef PHP_BBCODE_H
 #define PHP_BBCODE_H 1
 
-#define PHP_BBCODE_VERSION "1.0"
+#define PHP_BBCODE_VERSION "1.1"
 #define PHP_BBCODE_EXTNAME "bbcode"
 
 PHP_MINIT_FUNCTION(bbcode);
