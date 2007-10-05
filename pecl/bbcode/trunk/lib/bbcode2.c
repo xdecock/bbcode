@@ -386,31 +386,45 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 						tag = bmidstr(string, offset+1, next_equal-offset-1);
 						if (BBCODE_ERR!=(tag_id=bbcode_get_tag_id(parser, tag,
 										1))) {
-							if (quote_double || quote_single) {
+							if (quote_double || quote_single || quote_html) {
 								end=next_close;
 								no_quote=0;
+								int diff=0;
 								if (quote_single && bchar(string, next_equal+1)
 								=='\'') {
 									end_quote=end_single;
 								} else if (quote_double && bchar(string,
 										next_equal+1)=='"') {
 									end_quote=end_double;
-								} else if (quote_html && binstrcaseless(string,
-										next_equal+1, html_quote)) {
-									end_quote=end_html;
+									
 								} else {
-									argument=bmidstr(string, next_equal+1,
-											next_close-next_equal-1);
-									no_quote=1;
+									if (quote_html) {
+										bstring to_comp=bmidstr(string, next_equal+1,
+												blength(html_quote));
+										if (0==bstricmp(html_quote, to_comp)){
+											end_quote=end_html;
+											diff=5;
+										} else {
+											argument=bmidstr(string, next_equal+1,
+													next_close-next_equal-1);
+											no_quote=1;
+										}
+										bdestroy(to_comp);
+									} else {
+										argument=bmidstr(string, next_equal+1,
+												next_close-next_equal-1);
+										no_quote=1;
+									}
 								}
 								if (!no_quote) {
 									end=binstrcaseless(string,next_equal+1, end_quote);
 									if (end != BSTR_ERR) {
-										argument=bmidstr(string, next_equal+2,
-												end++ - next_equal - 2);
+										argument=bmidstr(string, next_equal+2+diff,
+												end++ - next_equal - 2-diff);
 									} else {
 										end=string_length+5;
 									}
+									next_close=end+diff;
 								}
 							} else {
 								argument=bmidstr(string, next_equal+1,
@@ -857,7 +871,7 @@ int bbcode_get_tag_id(bbcode_parser_p parser, bstring value, int has_arg) {
 			 * First, get the count of elements & the elements */
 			int count=bbcode_list->num_cache[taglen];
 			bbcode_search_p list=bbcode_list->search_cache[taglen];
-			if (count<5) {
+			if (count<500) {
 				/* We use linear search, should be faster */
 				int i;
 				for (i=0; i<count; i++) {
@@ -890,32 +904,34 @@ int bbcode_get_tag_id(bbcode_parser_p parser, bstring value, int has_arg) {
 				int equal, pos;
 				while (1) {
 					equal=bstrcmp(lower_tag, list[i].tag_name);
-					if (!equal) {
+					if (equal==0) {
 						/* We have found the entry */
 						pos=list[i].tag_id;
-						if (has_arg) {
+						if (has_arg==1) {
 							if (bbcode_get_bbcode(parser,pos)->speed_cache
 							& BBCODE_CACHE_ACCEPT_ARG) {
 								return pos;
 							}
-						} else {
+						} else if (has_arg==0) {
 							if (bbcode_get_bbcode(parser,pos)->speed_cache
 							& BBCODE_CACHE_ACCEPT_NOARG) {
 								return pos;
 							}
+						} else {
+							return pos;
 						}
 						return BBCODE_ERR;
-					} else if (equal>0) {
+					} else if (equal<0) {
 						/* the searched entry is greater than this pos */
 						left=i;
-						i=((left+right+1)>>1);
+						i=((right+i)>>1);
 						if (left==i) {
 							break;
 						}
 					} else {
 						/* the searched entry is smaller than this pos */
 						right=i;
-						i=((left+right)>>1);
+						i=((left+i)>>1);
 						if (right==i) {
 							break;
 						}
