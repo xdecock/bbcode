@@ -29,9 +29,9 @@ http://pear.php.net/dtd/package-2.0.xsd">
     <active>yes</active>
   </lead>
 
-  <date>2007-10-05</date>
+  <date>2007-10-06</date>
   <version>
-    <release>0.10.1</release>
+    <release>0.10.2</release>
     <api>0.9.0</api>
   </version>
   <stability>
@@ -42,18 +42,19 @@ http://pear.php.net/dtd/package-2.0.xsd">
   <license uri="http://www.php.net/license">PHP License</license>
   
   <notes>
-	* Added Tests
-
-	* Corrected Callbacks Seg-Faults
-	* Removed Double Free
-	* Corrected Incorrect Results
-	* Corrected Arg Parsing
-	* Corrected Arg Quoting
+    * Exposed parser option alterations
+    * Exposed more flags for tag options
+	* Exposed All the library constants
+    * Exposed smiley API
+    * Exposed Argument Parser API
+    * Fixed some weird behaviour
+    * Added REMOVE_TAG_IF_EMPTY option on tag level
+	* Added the ability to alter parser behaviour at run time
+	* Corrected Segfault when unpaired Tags where found
   </notes>
 
   <contents>
     <dir name="/">
-      <file role='doc' name='EXPERIMENTAL'/>
       <file role='doc' name='CREDITS'/>
       <file role='src' name='config.m4'/>
       <file role='src' name='php_bbcode.h'/>
@@ -78,6 +79,12 @@ http://pear.php.net/dtd/package-2.0.xsd">
         <file role='test' name='test_11.phpt'/>
         <file role='test' name='test_12.phpt'/>
         <file role='test' name='test_13.phpt'/>
+        <file role='test' name='test_14.phpt'/>
+        <file role='test' name='test_15.phpt'/>
+        <file role='test' name='test_16.phpt'/>
+        <file role='test' name='test_17.phpt'/>
+        <file role='test' name='test_18.phpt'/>
+        <file role='test' name='test_19.phpt'/>
       </dir>
     </dir>
   </contents>

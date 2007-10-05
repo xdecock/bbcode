@@ -6,7 +6,6 @@ TODO Version $Id$
 -- PHP Interface --
 * Implements an inheritable object interface (dunno who will inherit, but
   i think there can't be a problem with it)
-* Expose the smiley API
 * Drop the Bstrlib Dependency by Using PHP Internal String manipulation
   facilities
 
