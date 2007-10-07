@@ -579,7 +579,7 @@ void bbcode_close_tag(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 					/* First Multipart Element */
 					if (bbcode_array_element(close,i)->multiparts == NULL){
 						if (bbcode_array_element(close,i)->flags
-						&BBCODE_TREE_FLAGS_MULTIPART_FIRST_NODE) {
+						& BBCODE_TREE_FLAGS_MULTIPART_FIRST_NODE) {
 							bbcode_array_element(close,i)->multiparts=bbcode_parse_stack_create();
 							bbcode_parse_stack_push_element(bbcode_array_element(close,i)->multiparts,bbcode_array_element(close,i));
 						} else {
@@ -595,9 +595,7 @@ void bbcode_close_tag(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 					tmp_tree->multiparts=bbcode_array_element(close,i)->multiparts;
 					tmp_tree->open_string=NULL;
 					tmp_tree->close_string=NULL;
-					tmp_tree->parent_node=bbcode_get_cn(parser);
 					bbcode_tree_push_tree_raw(parser, bbcode_get_cn(parser), tmp_tree, work);
-					bbcode_get_cn(parser) = bbcode_array_element(work,work->size-1);
 				}
 				close->size=0;
 			}
@@ -770,10 +768,20 @@ void bbcode_apply_rules(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 						/* Same Multipart element */
 						if ((tree->childs.element[i])->tree->multiparts == (tree->childs.element[j])->tree->multiparts){
 							/* Moving datas from 2° element to first one */
-							bbcode_tree_move_childs((tree->childs.element[j])->tree, (tree->childs.element[i])->tree, 0, (tree->childs.element[j])->tree->childs.size, (tree->childs.element[i])->tree->childs.size);
-							bbcode_tree_move_childs(tree, to_drop, j, 1, to_drop->childs.size);
+							bbcode_tree_move_childs(
+									tree->childs.element[j]->tree,
+									tree->childs.element[i]->tree, 0,
+									tree->childs.element[j]->tree->childs.size,
+									tree->childs.element[i]->tree->childs.size);
+							/* Dropping child */
+							bbcode_tree_move_childs(tree, to_drop, j, 1, 0);
 							/* Prepare merging (appending interpart elements to first tree) */
-							bbcode_tree_move_childs(tree,(tree->childs.element[i])->tree, i+1, j-i-2, (tree->childs.element[i])->tree->childs.size-1);
+							bbcode_tree_move_childs(
+									tree,
+									tree->childs.element[i]->tree,
+									i + 1,
+									j - i - 1,
+									tree->childs.element[i]->tree->childs.size - 1);
 						}
 					} else { 
 						break;
@@ -793,11 +801,11 @@ void bbcode_apply_rules(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 					bbcode_parse_smileys(last_string, parser->smileys);
 				}
 				bconcat(working_string, last_string);
-				bassigncstr(last_string, "");
+				bdelete(last_string, 0, blength(last_string));
 			}
 			bbcode_apply_rules(parser, (tree->childs.element[i])->tree, tmp_string);
 			bconcat (working_string, tmp_string);
-			bassigncstr(tmp_string, "");
+			bdelete(tmp_string, 0, blength(tmp_string));
 		} else {
 			bconcat (last_string, (tree->childs.element[i])->string);
 		}
@@ -808,69 +816,68 @@ void bbcode_apply_rules(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 			bbcode_parse_smileys(last_string, parser->smileys);
 		}
 		bconcat(working_string, last_string);
-		bassigncstr(last_string, "");
+		bdelete(last_string, 0, blength(last_string));
 	}
-	if ((tag->flags & BBCODE_FLAGS_REMOVE_IF_EMPTY) !=0 &&
-			blength(working_string)==0) {
-		return;
-	}
-	/* If element is not paired And no other special cases */
-	if ((parser->options & BBCODE_AUTO_CORRECT)==0 
-			&& (tree->flags & BBCODE_TREE_FLAGS_PAIRED)==0
-			&& (tag->flags	& BBCODE_FLAGS_ONE_OPEN_PER_LEVEL)==0) {
-		/* Preparing Return */
-		bassign(parsed, tree->open_string);
-		bconcat(parsed, working_string);
-	} else {
-		bassign(parsed, tag->open_tag);
-		arg=bfromcstr("");
-		if (tag->speed_cache & BBCODE_CACHE_ACCEPT_ARG){
-			if (blength(tree->argument)>0){
-				bassign(arg,tree->argument);
-			} else {
-				bassign(arg, tag->default_arg);
-			}
-			if (tag->flags & BBCODE_FLAGS_ARG_PARSING){
-				bbcode_parser_p arg_parser;
-				char *string_output;
-				int string_size;
-				if (parser->argument_parser != NULL){
-					arg_parser=parser->argument_parser;
+	if (!((tag->flags & BBCODE_FLAGS_REMOVE_IF_EMPTY) !=0 &&
+			blength(working_string)==0)) {
+		/* If element is not paired And no other special cases */
+		if ((parser->options & BBCODE_AUTO_CORRECT)==0 
+				&& (tree->flags & BBCODE_TREE_FLAGS_PAIRED)==0
+				&& (tag->flags	& BBCODE_FLAGS_ONE_OPEN_PER_LEVEL)==0) {
+			/* Preparing Return */
+			bassign(parsed, tree->open_string);
+			bconcat(parsed, working_string);
+		} else {
+			bassign(parsed, tag->open_tag);
+			arg=bfromcstr("");
+			if (tag->speed_cache & BBCODE_CACHE_ACCEPT_ARG){
+				if (blength(tree->argument)>0){
+					bassign(arg,tree->argument);
 				} else {
-					arg_parser=parser;
+					bassign(arg, tag->default_arg);
 				}
-				string_output=bbcode_parse(arg_parser, arg->data, arg->slen, &string_size);
-				bdestroy(arg);
-				arg=blk2bstr(string_output, string_size);
-				free(string_output);
+				if (tag->flags & BBCODE_FLAGS_ARG_PARSING){
+					bbcode_parser_p arg_parser;
+					char *string_output;
+					int string_size;
+					if (parser->argument_parser != NULL){
+						arg_parser=parser->argument_parser;
+					} else {
+						arg_parser=parser;
+					}
+					string_output=bbcode_parse(arg_parser, arg->data, arg->slen, &string_size);
+					bdestroy(arg);
+					arg=blk2bstr(string_output, string_size);
+					free(string_output);
+				}
 			}
+			/* Callbacks - 1/ Content_callback */
+			if (tag->content_handling_func != NULL){
+				tag->content_handling_func(working_string, arg, tag->content_handling_func_data);
+			}
+			/* Callbacks - 2/ Param callback */
+			if (tag->param_handling_func != NULL){
+				tag->param_handling_func(working_string, arg, tag->param_handling_func_data);
+			}
+			
+			/* Replacing {ARG} by $arg and {CONTENT} by $string in arg & start */
+			if (blength(arg)){
+				bfindreplace(arg, parser->content_replace, working_string,0);
+			}
+			if (tag->speed_cache & BBCODE_CACHE_START_HAS_BRACKET_OPEN){
+				bfindreplace(parsed, parser->content_replace, working_string, 0);
+				bfindreplace(parsed, parser->arg_replace, arg, 0);
+			}
+			/* Replacing {ARG} by $arg in string & end */
+			bfindreplace(working_string, parser->arg_replace, arg,0);
+			bassign(tmp_string, tag->close_tag);
+			if (tag->speed_cache & BBCODE_CACHE_END_HAS_BRACKET_OPEN){
+				bfindreplace(tmp_string, parser->arg_replace, arg, 0);
+			}
+			/* Concat everything */
+			bconcat(parsed, working_string);
+			bconcat(parsed, tmp_string);
 		}
-		/* Callbacks - 1/ Content_callback */
-		if (tag->content_handling_func != NULL){
-			tag->content_handling_func(working_string, arg, tag->content_handling_func_data);
-		}
-		/* Callbacks - 2/ Param callback */
-		if (tag->param_handling_func != NULL){
-			tag->param_handling_func(working_string, arg, tag->param_handling_func_data);
-		}
-		
-		/* Replacing {ARG} by $arg and {CONTENT} by $string in arg & start */
-		if (blength(arg)){
-			bfindreplace(arg, parser->content_replace, working_string,0);
-		}
-		if (tag->speed_cache & BBCODE_CACHE_START_HAS_BRACKET_OPEN){
-			bfindreplace(parsed, parser->content_replace, working_string, 0);
-			bfindreplace(parsed, parser->arg_replace, arg, 0);
-		}
-		/* Replacing {ARG} by $arg in string & end */
-		bfindreplace(working_string, parser->arg_replace, arg,0);
-		bassign(tmp_string, tag->close_tag);
-		if (tag->speed_cache & BBCODE_CACHE_END_HAS_BRACKET_OPEN){
-			bfindreplace(tmp_string, parser->arg_replace, arg, 0);
-		}
-		/* Concat everything */
-		bconcat(parsed, working_string);
-		bconcat(parsed, tmp_string);
 	}
 	/* Freeing ressources */
 	bdestroy(last_string);
@@ -1320,7 +1327,6 @@ void bbcode_tree_push_tree_child(bbcode_parser_p parser,
 	if (((bbcode_get_bbcode(parser,tag_id)->flags) & BBCODE_FLAGS_ONE_OPEN_PER_LEVEL) && ((bbcode_get_cn(parser)->tag_id) == tag_id) ){
 		bstring empty=bfromcstr("");
 		bbcode_close_tag(parser,tree, work, close, tag_id, empty, 1);
-		bdestroy(empty);
 	}
 	tmp_tree=bbcode_tree_create();
 	tmp_tree->tag_id=tag_id;
@@ -1398,8 +1404,6 @@ void bbcode_tree_mark_element_closed(bbcode_parse_tree_p tree) {
 /* Move a child set from a parent to another */
 void bbcode_tree_move_childs(bbcode_parse_tree_p from, bbcode_parse_tree_p to,
 		int offset_from, int count, int offset_to) {
-	bbcode_parse_tree_child_p start= NULL, stop= NULL;
-	int size=sizeof(bbcode_parse_tree_child_p);
 	int i;
 	if ( from->childs.size - offset_from < count ) {
 		count=from->childs.size-offset_from;
@@ -1410,10 +1414,13 @@ void bbcode_tree_move_childs(bbcode_parse_tree_p from, bbcode_parse_tree_p to,
 	bbcode_tree_check_child_size(to, to->childs.size + count);
 	if ( to->childs.size > offset_to ) {
 		/* We First Move the current childs to leave space */
-		for ( i = to->childs.size - 1; i >= offset_to; i-- ) {
+		for ( i = to->childs.size -1; i >= offset_to; i-- ) {
 			to->childs.element[ i + count ] = to->childs.element[ i ];
 		}
 	}
+	/* Setting the sizes to correct values */
+	to->childs.size += count;
+	from->childs.size -= count;
 	/* Copying Childs From Old Position to new */
 	for ( i = 0; i < count; i++) {
 		to->childs.element[ offset_to + i ] = from->childs.element[ offset_from + i ];
@@ -1422,12 +1429,9 @@ void bbcode_tree_move_childs(bbcode_parse_tree_p from, bbcode_parse_tree_p to,
 		}
 	}
 	/* Reducing Child Set In From Elements */
-	for (i = offset_from; i < from->childs.size - count ; i++) {
+	for (i = offset_from; i < from->childs.size; i++) {
 		from->childs.element[ i ] = from->childs.element[ i + count ];
 	}
-	/* Setting the sizes to correct values */
-	to->childs.size+=count;
-	from->childs.size-=count;
 }
 
 /*---------------------------
