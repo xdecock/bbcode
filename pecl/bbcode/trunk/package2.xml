@@ -42,15 +42,17 @@ http://pear.php.net/dtd/package-2.0.xsd">
   <license uri="http://www.php.net/license">PHP License</license>
   
   <notes>
-    * Exposed parser option alterations
-    * Exposed more flags for tag options
-	* Exposed All the library constants
+    * Corrected Segfault when unpaired Tags where found
+    
     * Exposed smiley API
     * Exposed Argument Parser API
-    * Fixed some weird behaviour
-    * Added REMOVE_TAG_IF_EMPTY option on tag level
-	* Added the ability to alter parser behaviour at run time
-	* Corrected Segfault when unpaired Tags where found
+    * Exposed parser option API
+      ** Added the ability to alter parser behaviour at run time
+    
+    * Exposed more flags for tag options
+      ** Added REMOVE_TAG_IF_EMPTY option on tag level
+    
+    * Fixed some weird behaviour on special parse method
   </notes>
 
   <contents>

@@ -539,7 +539,8 @@ PHP_FUNCTION(bbcode_add_smiley)
 	ZEND_FETCH_RESOURCE(parser, bbcode_parser_p, &z_bbcode_parser, -1, PHP_BBCODE_RES_NAME, le_bbcode);
 	
 	bbcode_parser_add_smiley(parser, search, s_len, replace, r_len);
-   	
+	efree(search);
+	efree(replace);
 	RETURN_BOOL(SUCCESS);
 }
 /* }}} */
