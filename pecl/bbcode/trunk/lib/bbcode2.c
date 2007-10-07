@@ -769,11 +769,11 @@ void bbcode_apply_rules(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 					if (tree->flags & BBCODE_TREE_FLAGS_MULTIPART){
 						/* Same Multipart element */
 						if ((tree->childs.element[i])->tree->multiparts == (tree->childs.element[j])->tree->multiparts){
-							/* Prepare merging (appending interpart elements to first tree) */
-							bbcode_tree_move_childs(tree,(tree->childs.element[i])->tree, i+1, j-i-2, (tree->childs.element[i])->tree->childs.size);
 							/* Moving datas from 2° element to first one */
 							bbcode_tree_move_childs((tree->childs.element[j])->tree, (tree->childs.element[i])->tree, 0, (tree->childs.element[j])->tree->childs.size, (tree->childs.element[i])->tree->childs.size);
 							bbcode_tree_move_childs(tree, to_drop, j, 1, to_drop->childs.size);
+							/* Prepare merging (appending interpart elements to first tree) */
+							bbcode_tree_move_childs(tree,(tree->childs.element[i])->tree, i+1, j-i-2, (tree->childs.element[i])->tree->childs.size-1);
 						}
 					} else { 
 						break;
@@ -1385,6 +1385,7 @@ void bbcode_tree_insert_child_at(bbcode_parse_tree_p tree,
 	memmove(&(tree->childs.element[pos+1]), 
 			&(tree->childs.element[pos]), size*(tree->childs.size-pos-1));
 	tree->childs.element[pos]=bbcode_parse_tree_child;
+	tree->childs.size+=1;
 }
 
 /* Mark an element closed, (and also multipart elements) */
@@ -1421,7 +1422,7 @@ void bbcode_tree_move_childs(bbcode_parse_tree_p from, bbcode_parse_tree_p to,
 		}
 	}
 	/* Reducing Child Set In From Elements */
-	for (i = offset_from; i <= from->childs.size - count ; i++) {
+	for (i = offset_from; i < from->childs.size - count ; i++) {
 		from->childs.element[ i ] = from->childs.element[ i + count ];
 	}
 	/* Setting the sizes to correct values */
@@ -1446,6 +1447,8 @@ bbcode_parse_tree_array_p bbcode_parse_stack_create() {
 void bbcode_parse_stack_free(bbcode_parse_tree_array_p stack) {
 	if (stack->element != NULL) {
 		free(stack->element);
+		stack->size=0;
+		stack->msize=0;
 		stack->element = NULL;
 	}
 	free(stack);
