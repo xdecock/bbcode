@@ -380,11 +380,11 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 		added=0;
 		if (bchar(string, offset)=='[') {
 			if (bchar(string, offset+1)!='/') {
-				/* Open */
-				bbcode_find_next(next_equal, string, offset, '=');
 				/* Equal */
+				bbcode_find_next(next_equal, string, offset, '=');
+				/* Close */
 				bbcode_find_next(next_close, string, offset, ']');
-				if (next_close<string_length) {
+				if (next_close!=BSTR_ERR && next_close<string_length) {
 					/* With Arg */
 					if (next_equal<next_close) {
 						tag = bmidstr(string, offset+1, next_equal-offset-1);
@@ -471,16 +471,18 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 					bdestroy(tag);
 				}
 			} else {
-				bbcode_find_next(next_close, string, offset, ']');
 				/* Close */
-				tag=bmidstr(string, offset+2, next_close-offset-2);
-				end=next_close;
-				if (BBCODE_ERR!=(tag_id=bbcode_get_tag_id(parser, tag, -1))) {
-					bbcode_close_tag(parser, tree, work_stack, close_stack,
-							tag_id, bmidstr(string, offset, end-offset+1), 1);
-					added=1;
+				bbcode_find_next(next_close, string, offset, ']');
+				if (next_close!=BSTR_ERR && next_close<string_length) { 
+					tag=bmidstr(string, offset+2, next_close-offset-2);
+					end=next_close;
+					if (BBCODE_ERR!=(tag_id=bbcode_get_tag_id(parser, tag, -1))) {
+						bbcode_close_tag(parser, tree, work_stack, close_stack,
+								tag_id, bmidstr(string, offset, end-offset+1), 1);
+						added=1;
+					}
+					bdestroy(tag);
 				}
-				bdestroy(tag);
 			}
 		}
 		if (!added) {
