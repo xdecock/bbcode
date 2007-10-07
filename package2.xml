@@ -29,9 +29,9 @@ http://pear.php.net/dtd/package-2.0.xsd">
     <active>yes</active>
   </lead>
 
-  <date>2007-10-06</date>
+  <date>2007-10-08</date>
   <version>
-    <release>0.10.2</release>
+    <release>0.10.3</release>
     <api>0.10.0</api>
   </version>
   <stability>
@@ -42,17 +42,10 @@ http://pear.php.net/dtd/package-2.0.xsd">
   <license uri="http://www.php.net/license">PHP License</license>
   
   <notes>
-    * Corrected Segfault when unpaired Tags where found
-    
-    * Exposed smiley API
-    * Exposed Argument Parser API
-    * Exposed parser option API
-      ** Added the ability to alter parser behaviour at run time
-    
-    * Exposed more flags for tag options
-      ** Added REMOVE_TAG_IF_EMPTY option on tag level
-    
-    * Fixed some weird behaviour on special parse method
+    * Corrected a possible Double Free off tag arguments.
+    * Corrected a possible Segmentation Fault on incorrect close tags.
+    ** Corrected incorrect detection of close tags when ] was missing at the end of the string.
+    * Added efree for smileys initialisation that was leading to runtime leaking.
   </notes>
 
   <contents>
@@ -87,6 +80,7 @@ http://pear.php.net/dtd/package-2.0.xsd">
         <file role='test' name='test_17.phpt'/>
         <file role='test' name='test_18.phpt'/>
         <file role='test' name='test_19.phpt'/>
+        <file role='test' name='test_20.phpt'/>
       </dir>
     </dir>
   </contents>
