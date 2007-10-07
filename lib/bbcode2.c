@@ -1265,11 +1265,13 @@ void bbcode_tree_free(bbcode_parse_tree_p tree) {
 		} else {
 			bdestroy(tree->childs.element[i]->string);
 		}
-		bdestroy(tree->argument);
 		bbcode_tree_child_destroy(tree->childs.element[i]);
 	}
 	if (tree->childs.element != NULL){
 		free(tree->childs.element);
+	}
+	if (tree->argument != NULL){
+		bdestroy(tree->argument);
 	}
 	if (tree->open_string != NULL) {
 		bdestroy(tree->open_string);
