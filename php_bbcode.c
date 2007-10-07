@@ -32,6 +32,8 @@ typedef struct _bbcode_object {
 	long 			rsrc_id;
 } bbcode_object;
 
+int callback_count=0;
+
 int le_bbcode;
 static function_entry bbcode_functions[] = {
 	PHP_FE(bbcode_create, NULL)
@@ -84,6 +86,7 @@ int _php_bbcode_handling_content(bstring content, bstring param, void *datas){
 	zval **funcname;
 	int i, res;
 	char *callable = NULL, *errbuf=NULL;
+	callback_count++;
 	funcname = ((zval **) datas);
 	TSRMLS_FETCH();
 
@@ -95,7 +98,7 @@ int _php_bbcode_handling_content(bstring content, bstring param, void *datas){
 		return 0;
 	}
 
-	zargs = (zval ***)safe_emalloc((2), sizeof(zval **), 0);
+	zargs = (zval ***) emalloc(sizeof(zval **) * 2);
 	zargs[0] = emalloc(sizeof(zval *));
 	MAKE_STD_ZVAL(*zargs[0]);
 	ZVAL_STRINGL(*zargs[0], bdata(content), blength(content), 1);
@@ -136,6 +139,7 @@ int _php_bbcode_handling_param(bstring content, bstring param, void *datas){
 	zval **funcname;
 	int i, res;
 	char *callable = NULL, *errbuf=NULL;
+	callback_count++;
 	funcname = ((zval **) datas);
 	TSRMLS_FETCH();
 
@@ -147,7 +151,7 @@ int _php_bbcode_handling_param(bstring content, bstring param, void *datas){
 		return 0;
 	}
 
-	zargs = (zval ***)safe_emalloc((2), sizeof(zval **), 0);
+	zargs = (zval ***) emalloc(sizeof(zval **) * 2);
 	zargs[0] = emalloc(sizeof(zval *));
 	MAKE_STD_ZVAL(*zargs[0]);
 	ZVAL_STRINGL(*zargs[0], bdata(content), blength(content), 1);
@@ -297,7 +301,6 @@ static void _php_bbcode_add_element(bbcode_parser_p parser, char *tag_name, zval
 ZEND_RSRC_DTOR_FUNC(php_bbcode_dtor)
 {
     bbcode_parser_p parser = (bbcode_parser_p)rsrc->ptr;
-
     if (parser) {
     	bbcode_parser_free(parser);
     }
@@ -494,9 +497,7 @@ PHP_FUNCTION(bbcode_destroy)
         RETURN_NULL();
     }
     
-	ZEND_FETCH_RESOURCE(parser, bbcode_parser_p, &z_bbcode_parser, -1, PHP_BBCODE_RES_NAME, le_bbcode);
-   	bbcode_parser_free(parser);
-   	
+    printf("%d",callback_count);
 	RETURN_BOOL(zend_list_delete(Z_LVAL_P(z_bbcode_parser)) == SUCCESS);
 }
 /* }}} */
