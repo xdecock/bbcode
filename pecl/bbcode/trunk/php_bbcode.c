@@ -32,8 +32,6 @@ typedef struct _bbcode_object {
 	long 			rsrc_id;
 } bbcode_object;
 
-int callback_count=0;
-
 int le_bbcode;
 static function_entry bbcode_functions[] = {
 	PHP_FE(bbcode_create, NULL)
@@ -86,7 +84,6 @@ int _php_bbcode_handling_content(bstring content, bstring param, void *datas){
 	zval **funcname;
 	int i, res;
 	char *callable = NULL, *errbuf=NULL;
-	callback_count++;
 	funcname = ((zval **) datas);
 	TSRMLS_FETCH();
 
@@ -139,7 +136,6 @@ int _php_bbcode_handling_param(bstring content, bstring param, void *datas){
 	zval **funcname;
 	int i, res;
 	char *callable = NULL, *errbuf=NULL;
-	callback_count++;
 	funcname = ((zval **) datas);
 	TSRMLS_FETCH();
 
@@ -323,6 +319,7 @@ PHP_MINIT_FUNCTION(bbcode)
 	REGISTER_LONG_CONSTANT("BBCODE_FLAGS_SMILEYS_OFF",			BBCODE_FLAGS_SMILEYS_OFF, CONST_CS|CONST_PERSISTENT);
 	REGISTER_LONG_CONSTANT("BBCODE_FLAGS_ONE_OPEN_PER_LEVEL",	BBCODE_FLAGS_ONE_OPEN_PER_LEVEL, CONST_CS|CONST_PERSISTENT);
 	REGISTER_LONG_CONSTANT("BBCODE_FLAGS_REMOVE_IF_EMPTY",		BBCODE_FLAGS_REMOVE_IF_EMPTY, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_FLAGS_DENY_REOPEN_CHILD",	BBCODE_FLAGS_DENY_REOPEN_CHILD, CONST_CS|CONST_PERSISTENT);
 	/* Parsers Flags */
 	/* Quotes styles */
 	REGISTER_LONG_CONSTANT("BBCODE_ARG_DOUBLE_QUOTE",			BBCODE_ARG_DOUBLE_QUOTE, CONST_CS|CONST_PERSISTENT);
@@ -336,10 +333,11 @@ PHP_MINIT_FUNCTION(bbcode)
 	REGISTER_LONG_CONSTANT("BBCODE_DEFAULT_SMILEYS_ON",			BBCODE_DEFAULT_SMILEYS_ON, CONST_CS|CONST_PERSISTENT);
 	REGISTER_LONG_CONSTANT("BBCODE_DEFAULT_SMILEYS_OFF",		BBCODE_DEFAULT_SMILEYS_OFF, CONST_CS|CONST_PERSISTENT);
 	REGISTER_LONG_CONSTANT("BBCODE_FORCE_SMILEYS_OFF",			BBCODE_FORCE_SMILEYS_OFF, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_SMILEYS_CASE_INSENSITIVE",	BBCODE_SMILEYS_CASE_INSENSITIVE, CONST_CS|CONST_PERSISTENT);
 	/* FLAG SET / ADD / REMOVE */
-	REGISTER_LONG_CONSTANT("BBCODE_SET_FLAGS_SET",				0, CONST_CS|CONST_PERSISTENT);
-	REGISTER_LONG_CONSTANT("BBCODE_SET_FLAGS_ADD",				1, CONST_CS|CONST_PERSISTENT);
-	REGISTER_LONG_CONSTANT("BBCODE_SET_FLAGS_REMOVE",			2, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_SET_FLAGS_SET",				BBCODE_SET_FLAGS_SET, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_SET_FLAGS_ADD",				BBCODE_SET_FLAGS_ADD, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("BBCODE_SET_FLAGS_REMOVE",			BBCODE_SET_FLAGS_REMOVE, CONST_CS|CONST_PERSISTENT);
     return SUCCESS;
 }
 /* END INIT/SHUTDOWN */
@@ -497,7 +495,6 @@ PHP_FUNCTION(bbcode_destroy)
         RETURN_NULL();
     }
     
-    printf("%d",callback_count);
 	RETURN_BOOL(zend_list_delete(Z_LVAL_P(z_bbcode_parser)) == SUCCESS);
 }
 /* }}} */
@@ -520,7 +517,7 @@ PHP_FUNCTION(bbcode_parse)
 	/* converting string for bbcode_parse_string usage */
 	ret_string=bbcode_parse(parser, string, str_len, &ret_size);
 	
-	RETVAL_STRINGL(ret_string, ret_size ,1);
+	RETVAL_STRINGL(ret_string, ret_size , 1);
 	free(ret_string);
 }
 /* }}} */
@@ -540,8 +537,6 @@ PHP_FUNCTION(bbcode_add_smiley)
 	ZEND_FETCH_RESOURCE(parser, bbcode_parser_p, &z_bbcode_parser, -1, PHP_BBCODE_RES_NAME, le_bbcode);
 	
 	bbcode_parser_add_smiley(parser, search, s_len, replace, r_len);
-	efree(search);
-	efree(replace);
 	RETURN_BOOL(SUCCESS);
 }
 /* }}} */
@@ -563,16 +558,16 @@ PHP_FUNCTION(bbcode_set_flags)
 	
 	flags=bbcode_parser_get_flags(parser);
 	switch (mode){
-		case 1:
+		case BBCODE_SET_FLAGS_ADD:
 			bbcode_parser_set_flags(parser, flags | new_flags);
 			break;
 			
-		case 2:
+		case BBCODE_SET_FLAGS_REMOVE:
 			bbcode_parser_set_flags(parser, flags & (~new_flags));
 			break;
 			
 		default:
-		case 0:
+		case BBCODE_SET_FLAGS_SET:
 			bbcode_parser_set_flags(parser, new_flags);
 			break;
 			
@@ -595,7 +590,6 @@ PHP_FUNCTION(bbcode_set_arg_parser)
     }
 	ZEND_FETCH_RESOURCE(parser, bbcode_parser_p, &z_bbcode_parser, -1, PHP_BBCODE_RES_NAME, le_bbcode);
 	ZEND_FETCH_RESOURCE(arg_parser, bbcode_parser_p, &z_bbcode_parser_child, -1, PHP_BBCODE_RES_NAME, le_bbcode);
-	
    	bbcode_parser_set_arg_parser(parser, arg_parser);
 	RETURN_BOOL(SUCCESS);
 }
