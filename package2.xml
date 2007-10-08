@@ -46,6 +46,7 @@ http://pear.php.net/dtd/package-2.0.xsd">
     * Corrected a possible Segmentation Fault on incorrect close tags.
     ** Corrected incorrect detection of close tags when ] was missing at the end of the string.
     * Added efree for smileys initialisation that was leading to runtime leaking.
+    * Make the DISABLE_TREE_BUILD work +added test
   </notes>
 
   <contents>
@@ -81,6 +82,9 @@ http://pear.php.net/dtd/package-2.0.xsd">
         <file role='test' name='test_18.phpt'/>
         <file role='test' name='test_19.phpt'/>
         <file role='test' name='test_20.phpt'/>
+        <file role='test' name='test_21.phpt'/>
+        <file role='test' name='test_22.phpt'/>
+        <file role='test' name='test_23.phpt'/>
       </dir>
     </dir>
   </contents>

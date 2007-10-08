@@ -28,6 +28,7 @@
 #define BBCODE_FLAGS_SMILEYS_OFF        0x8
 #define BBCODE_FLAGS_ONE_OPEN_PER_LEVEL 0x10
 #define BBCODE_FLAGS_REMOVE_IF_EMPTY	0x20
+#define BBCODE_FLAGS_DENY_REOPEN_CHILD	0x40
 
 #define BBCODE_ARG_DOUBLE_QUOTE    0x1
 #define BBCODE_ARG_SINGLE_QUOTE    0x2
@@ -38,6 +39,7 @@
 #define BBCODE_DEFAULT_SMILEYS_OFF 0x800
 #define BBCODE_FORCE_SMILEYS_OFF   0x1000
 #define BBCODE_DISABLE_TREE_BUILD  0x2000
+#define BBCODE_SMILEYS_CASE_INSENSITIVE 0x4000
 
 #define BBCODE_CACHE_ACCEPT_ARG             0x01
 #define BBCODE_CACHE_ACCEPT_NOARG           0x02
@@ -134,6 +136,7 @@ struct _bbcode_smiley_array {
 	int size;
 	int msize;
 	bbcode_smiley_p smileys;
+	char ci;
 };
 
 /* Represents a set of bbcode rules */
