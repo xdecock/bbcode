@@ -47,6 +47,10 @@ http://pear.php.net/dtd/package-2.0.xsd">
     ** Corrected incorrect detection of close tags when ] was missing at the end of the string.
     * Added efree for smileys initialisation that was leading to runtime leaking.
     * Make the DISABLE_TREE_BUILD work +added test
+    * Added BBCODE_FLAGS_DENY_REOPEN_CHILD to permits some tags to Deny child reopening
+    * Added BBCODE_SMILEYS_CASE_INSENSITIVE to permits case insensitive smileys detection
+    * Corrected Memory leaking of smileys strings.
+    * Makes bbcode_set_flags work correctly.
   </notes>
 
   <contents>
