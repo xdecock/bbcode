@@ -79,9 +79,9 @@
     bcatcstr(close_tag,"]"); \
     int sc_offset=binstrcaseless(string, next_close, close_tag); \
     if (sc_offset!=BSTR_ERR){ \
-        bbcode_tree_push_tree_child(parser, bbcode_get_cn(parser), work_stack, close_stack, bmidstr(string, offset, end-offset+1),tag_id, argument); \
-        bbcode_tree_push_string_child(bbcode_get_cn(parser), bmidstr(string,next_close+1,sc_offset-next_close-1)); \
-        bbcode_close_tag(parser, bbcode_get_cn(parser), work_stack, close_stack, tag_id, bmidstr(string, sc_offset, blength(close_tag)),1); \
+        bbcode_tree_push_tree_child(parser, bbcode_get_cn(parser), work_stack, close_stack, bmidstr(string, offset, end-offset+1),tag_id, argument, offset); \
+        bbcode_tree_push_string_child(bbcode_get_cn(parser), bmidstr(string,next_close+1,sc_offset-next_close-1), offset+next_close+1); \
+        bbcode_close_tag(parser, bbcode_get_cn(parser), work_stack, close_stack, tag_id, bmidstr(string, sc_offset, blength(close_tag)),1, sc_offset); \
         added=1; \
         end=next_close=sc_offset+blength(close_tag)-1; \
     } \
@@ -130,7 +130,10 @@ typedef struct _bbcode_parse_tree_child ** bbcode_parse_tree_child_pp;
 typedef struct _bbcode_parse_tree_child_array bbcode_parse_tree_child_array;
 typedef struct _bbcode_tag_id_search bbcode_tag_id_search;
 typedef struct _bbcode_tag_id_search * bbcode_tag_id_search_p;
-
+typedef struct _bbcode_validation bbcode_validation;
+typedef struct _bbcode_validation * bbcode_validation_p;
+typedef struct _bbcode_validation_array bbcode_validation_array;
+typedef struct _bbcode_validation_array * bbcode_validation_array_p;
 /* This represent a smiley list */
 struct _bbcode_smiley_array {
 	int size;
@@ -234,6 +237,7 @@ struct _bbcode_parse_tree_child {
 		bbcode_parse_tree_p tree;
 		bstring string;
 	};
+	int offset;
 	char type;
 };
 
@@ -241,6 +245,22 @@ struct _bbcode_parse_tree_child {
 struct _bbcode_search {
 	bstring tag_name;
 	int tag_id;
+};
+
+/* BBCode Validation error entries */
+struct _bbcode_validation {
+	char error_type;
+	int tag_id_1;
+	int tag_id_2;
+	int offset_1;
+	int offset_2;
+};
+
+/* BBCode Validation array entries */
+struct _bbcode_validation_entry {
+	int msize;
+	int size;
+	bbcode_validation_p element;
 };
 
 /*---------------------------
@@ -293,7 +313,7 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 /* This closes an active tag */
 void bbcode_close_tag(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 		bbcode_parse_tree_array_p work, bbcode_parse_tree_array_p close,
-		int tag_id, bstring close_string, int true_close);
+		int tag_id, bstring close_string, int true_close, int offset);
 
 /* This make some basic corrections to a given tree */
 int bbcode_correct_tree(bbcode_parser_p parser, bbcode_parse_tree_p tree,
@@ -404,10 +424,10 @@ void bbcode_tree_check_child_size(bbcode_parse_tree_p tree, int size);
 void bbcode_tree_push_tree_child(bbcode_parser_p parser,
 		bbcode_parse_tree_p tree, bbcode_parse_tree_array_p work,
 		bbcode_parse_tree_array_p close, bstring open_string, int tag_id,
-		bstring argument);
+		bstring argument, int offset);
 
 /* adds a child to the current list (string_leaf) */
-void bbcode_tree_push_string_child(bbcode_parse_tree_p tree, bstring string);
+void bbcode_tree_push_string_child(bbcode_parse_tree_p tree, bstring string, int offset);
 
 /* adds a tree to the current list (raw) */
 void bbcode_tree_push_tree_raw(bbcode_parser_p parser, bbcode_parse_tree_p tree,

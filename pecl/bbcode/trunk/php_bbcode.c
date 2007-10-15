@@ -480,7 +480,7 @@ PHP_FUNCTION(bbcode_add_element)
         RETURN_NULL();
     }
 	ZEND_FETCH_RESOURCE(parser, bbcode_parser_p, &z_bbcode_parser, -1, PHP_BBCODE_RES_NAME, le_bbcode);
-	php_bbcode_add_element(parser, tag_name, bbcode_entry);
+	_php_bbcode_add_element(parser, tag_name, bbcode_entry);
 	RETURN_TRUE;
 }
 /* }}} */

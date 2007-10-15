@@ -45,7 +45,6 @@ http://pear.php.net/dtd/package-2.0.xsd">
     * Corrected a possible Double Free off tag arguments.
     * Corrected a possible Segmentation Fault on incorrect close tags.
     ** Corrected incorrect detection of close tags when ] was missing at the end of the string.
-    * Added efree for smileys initialisation that was leading to runtime leaking.
     * Make the DISABLE_TREE_BUILD work +added test
     * Added BBCODE_FLAGS_DENY_REOPEN_CHILD to permits some tags to Deny child reopening
     * Added BBCODE_SMILEYS_CASE_INSENSITIVE to permits case insensitive smileys detection
