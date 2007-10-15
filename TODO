@@ -10,7 +10,6 @@ TODO Version $Id$
   facilities
 
 -- Code Cleanup & Documentation --
-* Provide ZVal onDestroy cleanup facilities
 * Provide Better Documentation for the bbcode lib
 * Try to remove duplicates code sections
 * Move Unecessary Loop operations outside a loop
