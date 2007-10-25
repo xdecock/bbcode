@@ -89,7 +89,7 @@ void bbcode_parser_add_smiley(bbcode_parser_p parser, char *smiley_search,
 }
 
 /* Parse a BBCoded string to is treated equivalent */
-char *bbcode_parse(bbcode_parser_p parser, char *string, unsigned int string_size,
+char *bbcode_parse(bbcode_parser_p parser, unsigned char *string, unsigned int string_size,
 		int *result_size) {
 	bstring to_parse = NULL;
 	bstring parsed = NULL;
@@ -149,9 +149,9 @@ char *bbcode_parse(bbcode_parser_p parser, char *string, unsigned int string_siz
 	}
 }
 
-bbcode_validation_p bbcode_validate(bbcode_parser_p parser, char *string, int string_size){
+/*bbcode_validation_p bbcode_validate(bbcode_parser_p parser, char *string, int string_size){
 	
-}
+}*/
 
 /* Get current options of the bbcode_parser */
 int bbcode_parser_get_flags(bbcode_parser_p parser) {
