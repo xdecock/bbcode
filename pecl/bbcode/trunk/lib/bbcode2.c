@@ -89,7 +89,7 @@ void bbcode_parser_add_smiley(bbcode_parser_p parser, char *smiley_search,
 }
 
 /* Parse a BBCoded string to is treated equivalent */
-char *bbcode_parse(bbcode_parser_p parser, char *string, int string_size,
+char *bbcode_parse(bbcode_parser_p parser, char *string, unsigned int string_size,
 		int *result_size) {
 	bstring to_parse = NULL;
 	bstring parsed = NULL;
@@ -225,7 +225,6 @@ void bbcode_prepare_tag_list(bbcode_parser_p parser) {
 			list->search_cache[slen]=(bbcode_search_p) realloc(
 					list->search_cache[slen], sizeof(bbcode_search) * (list->num_cache[slen]+1));
 		}
-		int pos=list->num_cache[slen];
 		bbcode_search temp;
 		temp.tag_name=bbcode->tag;
 		temp.tag_id=i;
@@ -255,7 +254,7 @@ void bbcode_prepare_tag_list(bbcode_parser_p parser) {
 			}
 			/* We add all entries */
 			bsplited=bsplit (work, ',');
-			int find, not_in_list;
+			int find;
 			bbcode_allow_list_check_size(list->root->childs, bsplited->qty);
 			for (j=0; j<bsplited->qty; j++) {
 				find = bbcode_get_tag_id (parser, bsplited->entry[j], -1);
@@ -309,7 +308,7 @@ void bbcode_prepare_tag_list(bbcode_parser_p parser) {
 				}
 				/* We add all entries */
 				bsplited=bsplit (work, ',');
-				int find, not_in_list;
+				int find;
 				bbcode_allow_list_check_size(bbcode->parents, bsplited->qty);
 				for (j=0; j<bsplited->qty; j++) {
 					find = bbcode_get_tag_id (parser, bsplited->entry[j], -1);
@@ -339,7 +338,7 @@ void bbcode_prepare_tag_list(bbcode_parser_p parser) {
 				}
 				/* We add all entries */
 				bsplited=bsplit (work, ',');
-				int find, not_in_list;
+				int find;
 				bbcode_allow_list_check_size(bbcode->childs, bsplited->qty);
 				for (j=0; j<bsplited->qty; j++) {
 					find = bbcode_get_tag_id (parser, bsplited->entry[j], -1);
@@ -593,7 +592,6 @@ void bbcode_close_tag(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 			/* Reopening incorrectly nested & closed tags */
 			if (parser->options & BBCODE_CORRECT_REOPEN_TAGS) {
 				bbcode_parse_tree_p tmp_tree = NULL;
-				bbcode_parse_tree_array_p first = NULL;
 				for (i=local_closes->size-1; i>=0; --i) {
 					/* First Multipart Element */
 					if (bbcode_array_element(local_closes,i)->multiparts == NULL){
@@ -969,7 +967,6 @@ int bbcode_get_tag_id(bbcode_parser_p parser, bstring value, int has_arg) {
 				int left=0;
 				int right=count-1;
 				int i=count/2;
-				char found=0;
 				int equal, pos;
 				while (1) {
 					equal=bstrcmp(lower_tag, list[i].tag_name);
@@ -1144,6 +1141,7 @@ bbcode_array_p bbcode_array_create() {
 	array->size=0;
 	array->msize=0;
 	array->element=NULL;
+	return array;
 }
 
 /* Free a BBCode array */
@@ -1445,7 +1443,6 @@ void bbcode_tree_insert_child_at(bbcode_parse_tree_p tree,
 
 /* Mark an element closed, (and also multipart elements) */
 void bbcode_tree_mark_element_closed(bbcode_parse_tree_p tree) {
-	int i;
 	bbcode_apply_flag_to_parts(tree->multiparts, BBCODE_TREE_FLAGS_PAIRED, 1)
 	tree->flags |=BBCODE_TREE_FLAGS_PAIRED;
 }

@@ -29,9 +29,9 @@ http://pear.php.net/dtd/package-2.0.xsd">
     <active>yes</active>
   </lead>
 
-  <date>2007-10-08</date>
+  <date>2007-10-25</date>
   <version>
-    <release>0.10.3</release>
+    <release>0.10.4</release>
     <api>0.10.0</api>
   </version>
   <stability>
@@ -42,14 +42,9 @@ http://pear.php.net/dtd/package-2.0.xsd">
   <license uri="http://www.php.net/license">PHP License</license>
   
   <notes>
-    * Corrected a possible Double Free off tag arguments.
-    * Corrected a possible Segmentation Fault on incorrect close tags.
-    ** Corrected incorrect detection of close tags when ] was missing at the end of the string.
-    * Make the DISABLE_TREE_BUILD work +added test
-    * Added BBCODE_FLAGS_DENY_REOPEN_CHILD to permits some tags to Deny child reopening
-    * Added BBCODE_SMILEYS_CASE_INSENSITIVE to permits case insensitive smileys detection
-    * Corrected Memory leaking of smileys strings.
-    * Makes bbcode_set_flags work correctly.
+    * Corrected bug 12240
+    * Corrected bug 12241
+    * Added test case in order to cover the function bbcode_add_element
   </notes>
 
   <contents>
@@ -88,6 +83,7 @@ http://pear.php.net/dtd/package-2.0.xsd">
         <file role='test' name='test_21.phpt'/>
         <file role='test' name='test_22.phpt'/>
         <file role='test' name='test_23.phpt'/>
+        <file role='test' name='test_24.phpt'/>
       </dir>
     </dir>
   </contents>
