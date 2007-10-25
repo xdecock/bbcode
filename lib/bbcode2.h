@@ -291,7 +291,7 @@ void bbcode_parser_add_smiley(bbcode_parser_p parser, char *smiley_search,
 		int smiley_search_size, char *smiley_replace, int smiley_replace_size);
 
 /* Parse a BBCoded string to is treated equivalent */
-char *bbcode_parse(bbcode_parser_p parser, char *string, int string_size,
+char *bbcode_parse(bbcode_parser_p parser, unsigned char *string, unsigned int string_size,
 		int *result_size);
 
 /* Get current options of the bbcode_parser */

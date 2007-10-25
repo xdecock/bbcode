@@ -192,7 +192,7 @@ static void _php_bbcode_add_element(bbcode_parser_p parser, char *tag_name, zval
 	char all[]="all";
 	int (*content_handling_func)(bstring content, bstring param, void *func_data)=NULL;
 	int (*param_handling_func)(bstring content, bstring param, void *func_data)=NULL;
-    HashTable *ht;
+    HashTable *ht=NULL;
     int flags=0;
 	char *childs=all;
 	int childs_len=3;
@@ -411,7 +411,7 @@ PHP_FUNCTION(bbcode_create)
     /* If array given initialisation */
     if(bbcode_entry!=NULL){
 	    int i;
-	    HashTable *myht;
+	    HashTable *myht=NULL;
 	    
 	    if (Z_TYPE_P(bbcode_entry) == IS_ARRAY) {
 	        myht = HASH_OF(bbcode_entry);
@@ -489,7 +489,6 @@ PHP_FUNCTION(bbcode_add_element)
 PHP_FUNCTION(bbcode_destroy)
 {
 	zval *z_bbcode_parser;
-	bbcode_parser_p parser=NULL;
 	
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &z_bbcode_parser) == FAILURE) {
         RETURN_NULL();
@@ -504,9 +503,8 @@ PHP_FUNCTION(bbcode_parse)
 {
 	zval *z_bbcode_parser;
 	bbcode_parser_p parser;
-	bstring to_parse;
-	char *string;
-	int str_len;
+	unsigned char *string;
+	unsigned int str_len;
 	int ret_size;
 	char *ret_string;
 	
