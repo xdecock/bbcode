@@ -14,8 +14,9 @@ http://pear.php.net/dtd/package-2.0.xsd">
 
   <description>
   This is a quick and efficient BBCode Parsing Library.
-  It provides various tag types, high speed one pass parsing,
-  callback system, tag position restriction.
+  It provides various tag types, high speed tree based parsing,
+  callback system, tag position restriction, Smiley Handling,
+  Subparsing
   
   It will force closing BBCode tags in the good order, and closing
   terminating tags at the end of the string this is in order to ensure
@@ -29,27 +30,30 @@ http://pear.php.net/dtd/package-2.0.xsd">
     <active>yes</active>
   </lead>
 
-  <date>2007-10-25</date>
+  <date>2008-02-11</date>
   <version>
-    <release>0.10.4</release>
-    <api>0.10.0</api>
+    <release>1.0.0</release>
+    <api>1.0.0</api>
   </version>
   <stability>
-    <release>beta</release>
-    <api>beta</api>
+    <release>stable</release>
+    <api>stable</api>
   </stability>
 
-  <license uri="http://www.php.net/license">PHP License</license>
+  <license filesource="/LICENSE">PHP / BSD</license>
   
   <notes>
-    * Corrected bug 12240
-    * Corrected bug 12241
-    * Added test case in order to cover the function bbcode_add_element
+    * Corrected bug 12582 - License problems
+    * Released as stable
+    * Completed TODO - List
+    * Updated Package Description (Parsing is no longer a "True" One pass)
   </notes>
 
   <contents>
     <dir name="/">
       <file role='doc' name='CREDITS'/>
+      <file role='doc' name='LICENSE'/>
+      <file role='doc' name='TODO'/>
       <file role='src' name='config.m4'/>
       <file role='src' name='php_bbcode.h'/>
       <file role='src' name='php_bbcode.c'/>
