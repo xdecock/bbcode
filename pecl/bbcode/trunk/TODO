@@ -13,3 +13,8 @@ TODO Version $Id$
 * Provide Better Documentation for the bbcode lib
 * Try to remove duplicates code sections
 * Move Unecessary Loop operations outside a loop
+
+-- Enhancements --
+* Add Validator functionnality
+* Provide more fault tolerant code
+* Provide per tag fault handling modes
