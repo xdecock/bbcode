@@ -43,6 +43,7 @@ http://pear.php.net/dtd/package-2.0.xsd">
   <license filesource="/LICENSE">PHP / BSD</license>
   
   <notes>
+  	* No code Change - only released as stable
     * Corrected bug 12582 - License problems
     * Released as stable
     * Completed TODO - List
