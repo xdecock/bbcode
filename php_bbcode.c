@@ -344,8 +344,8 @@ PHP_MINIT_FUNCTION(bbcode)
 
 #if Void_0
 /* {{{
-/* Working on it, not finished yet */
-/* OBJECT START */
+ * Working on it, not finished yet
+ * OBJECT START */
 static void _php_bbcode_object_free_storage(void *object TSRMLS_DC){
 	bbcode_object *intern = (bbcode_object *)object;
 	zval *pointer;
@@ -386,8 +386,8 @@ static void _php_bbcode_object_new(zend_class_entry *class_type, zend_object_han
 									NULL TSRMLS_CC);
 	retval->handlers = handlers;
 }
-/* END OBJECT */
-/* }}} */
+/* END OBJECT
+ * }}} */
 #endif
 /* {{{ proto ressource bbcode_container bbcode_create([array initial_tags])
    create a new bbcode_container and add elements given in the array to the ressource
