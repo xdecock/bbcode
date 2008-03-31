@@ -597,7 +597,7 @@ PHP_FUNCTION(bbcode_set_arg_parser)
 PHP_MINFO_FUNCTION(bbcode)
 {
 	php_info_print_table_start();
-	php_info_print_table_row(2, "BBCode support", "enabled");
+	php_info_print_table_header(2, "BBCode support", "enabled");
 	php_info_print_table_row(2, "BBCode Version Support", PHP_BBCODE_VERSION);
 	php_info_print_table_row(2, "BBCode Library Version", BBCODE_LIB_VERSION);
 	php_info_print_table_row(2, "BBCode Max Stack Size", "Dynamic");
