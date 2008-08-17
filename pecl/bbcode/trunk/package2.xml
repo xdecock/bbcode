@@ -30,9 +30,9 @@ http://pear.php.net/dtd/package-2.0.xsd">
     <active>yes</active>
   </lead>
 
-  <date>2008-02-11</date>
+  <date>2008-08-17</date>
   <version>
-    <release>1.0.0</release>
+    <release>1.0.1</release>
     <api>1.0.0</api>
   </version>
   <stability>
@@ -43,11 +43,13 @@ http://pear.php.net/dtd/package-2.0.xsd">
   <license filesource="/LICENSE">PHP / BSD</license>
   
   <notes>
-  	* No code Change - only released as stable
-    * Corrected bug 12582 - License problems
-    * Released as stable
-    * Completed TODO - List
-    * Updated Package Description (Parsing is no longer a "True" One pass)
+  	* Corrected a 64bit issue, int were used in place of long
+  	* Minor optimisations
+  	* Corrected Thread safe error when compiling (#14333)
+  	* Corrected MacOSX Header error (#14197)
+  	* Corrected PHP 5.3 ZVAL_ADDREF change
+  	* Corrected Callbacks where not freed when using object it was causing a segfault(#13603)
+  	* Updated bstrlib
   </notes>
 
   <contents>
