@@ -1,8 +1,8 @@
 /*
  * This source file is part of the bstring string library.  This code was
- * written by Paul Hsieh in 2002-2007, and is covered by the BSD open source 
- * license. Refer to the accompanying documentation for details on usage and 
- * license.
+ * written by Paul Hsieh in 2002-2008, and is covered by the BSD open source 
+ * license and the GPL. Refer to the accompanying documentation for details 
+ * on usage and license.
  */
 
 /*
@@ -318,11 +318,11 @@ bstring aux = (bstring) b1;
 
 	d = b0->slen;
 	len = b1->slen;
-	if ((d | (b0->mlen - d) | len) < 0) return BSTR_ERR;
+	if ((d | (b0->mlen - d) | len | (d + len)) < 0) return BSTR_ERR;
 
 	if (b0->mlen <= d + len + 1) {
-		ptrdiff_t pd;
-		if (0 <= (pd = b1->data - b0->data) && pd < b0->mlen) {
+		ptrdiff_t pd = b1->data - b0->data;
+		if (0 <= pd && pd < b0->mlen) {
 			if (NULL == (aux = bstrcpy (b1))) return BSTR_ERR;
 		}
 		if (balloc (b0, d + len + 1) != BSTR_OK) {
@@ -333,13 +333,13 @@ bstring aux = (bstring) b1;
 
 	bBlockCopy (&b0->data[d], &aux->data[0], (size_t) len);
 	b0->data[d + len] = (unsigned char) '\0';
-	b0->slen += len;
+	b0->slen = d + len;
 	if (aux != b1) bdestroy (aux);
 	return BSTR_OK;
 }
 
 /*  int bconchar (bstring b, char c)
- *
+/ *
  *  Concatenate the single character c to the bstring b.
  */
 int bconchar (bstring b, char c) {
@@ -1783,14 +1783,9 @@ int i, l, n;
  *  efficient way.
  */
 bstring bread (bNread readPtr, void * parm) {
-int ret;
 bstring buff;
 
-	if (readPtr == NULL) return NULL;
-	buff = bfromcstr ("");
-	if (buff == NULL) return NULL;
-	ret = breada (buff, readPtr, parm);
-	if (ret < 0) {
+	if (0 > breada (buff = bfromcstr (""), readPtr, parm)) {
 		bdestroy (buff);
 		return NULL;
 	}
@@ -1885,13 +1880,9 @@ int c, d, e;
  *  there is some other detectable error, NULL is returned.
  */
 bstring bgets (bNgetc getcPtr, void * parm, char terminator) {
-int ret;
 bstring buff;
 
-	if (NULL == getcPtr || NULL == (buff = bfromcstr (""))) return NULL;
-
-	ret = bgetsa (buff, getcPtr, parm, terminator);
-	if (ret < 0 || buff->slen <= 0) {
+	if (0 > bgetsa (buff = bfromcstr (""), getcPtr, parm, terminator) || 0 >= buff->slen) {
 		bdestroy (buff);
 		buff = NULL;
 	}
@@ -2460,11 +2451,11 @@ size_t nsz;
 	smsz = snapUpSize (msz);
 	nsz = ((size_t) smsz) * sizeof (bstring);
 	if (nsz < (size_t) smsz) return BSTR_ERR;
-	l = bstr__realloc (sl->entry, nsz);
+	l = (bstring *) bstr__realloc (sl->entry, nsz);
 	if (!l) {
 		smsz = msz;
 		nsz = ((size_t) smsz) * sizeof (bstring);
-		l = bstr__realloc (sl->entry, nsz);
+		l = (bstring *) bstr__realloc (sl->entry, nsz);
 		if (!l) return BSTR_ERR;
 	}
 	sl->mlen = smsz;
@@ -2485,7 +2476,7 @@ size_t nsz;
 	if (sl->mlen == msz) return BSTR_OK;
 	nsz = ((size_t) msz) * sizeof (bstring);
 	if (nsz < (size_t) msz) return BSTR_ERR;
-	l = bstr__realloc (sl->entry, nsz);
+	l = (bstring *) bstr__realloc (sl->entry, nsz);
 	if (!l) return BSTR_ERR;
 	sl->mlen = msz;
 	sl->entry = l;
@@ -2752,6 +2743,7 @@ struct genBstrList g;
 extern int vsnprintf (char *buf, size_t count, const char *format, va_list arg);
 #endif /* vsnprintf */
 #endif
+
 #define exvsnprintf(r,b,n,f,a) {r = vsnprintf (b,n,f,a);}
 #endif
 #endif
