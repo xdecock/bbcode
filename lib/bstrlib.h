@@ -1,8 +1,8 @@
 /*
  * This source file is part of the bstring string library.  This code was
- * written by Paul Hsieh in 2002-2007, and is covered by the BSD open source 
- * license. Refer to the accompanying documentation for details on usage and 
- * license.
+ * written by Paul Hsieh in 2002-2008, and is covered by the BSD open source 
+ * license and the GPL. Refer to the accompanying documentation for details 
+ * on usage and license.
  */
 
 /*
@@ -201,13 +201,12 @@ struct tagbstring {
 #define bchar(b, p)         bchare ((b), (p), '\0')
 
 /* Static constant string initialization macro */
-#if defined(_MSC_VER) && defined(_DEBUG)
-# if _MSC_VER <= 1310
-#  define bsStatic(q)       {-32, (int) sizeof(q)-1, (unsigned char *) ("" q "")}
-# endif
+#define bsStaticMlen(q,m)   {(m), (int) sizeof(q)-1, (unsigned char *) ("" q "")}
+#if defined(_MSC_VER)
+# define bsStatic(q)        bsStaticMlen(q,-32)
 #endif
 #ifndef bsStatic
-# define bsStatic(q)        {-__LINE__, (int) sizeof(q)-1, (unsigned char *) ("" q "")}
+# define bsStatic(q)        bsStaticMlen(q,-__LINE__)
 #endif
 
 /* Static constant block parameter pair */
@@ -227,7 +226,7 @@ struct tagbstring {
 }
 #define btfromblk(t,s,l) blk2tbstr(t,s,l)
 #define bmid2tbstr(t,b,p,l) {                                                \
-    bstring bstrtmp_s = (b);                                                 \
+    const_bstring bstrtmp_s = (b);                                           \
     if (bstrtmp_s && bstrtmp_s->data && bstrtmp_s->slen >= 0) {              \
         int bstrtmp_left = (p);                                              \
         int bstrtmp_len  = (l);                                              \
