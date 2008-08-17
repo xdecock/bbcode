@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<package version="2.0" xmlns="http://pear.php.net/dtd/package-2.0"
+    xmlns:tasks="http://pear.php.net/dtd/tasks-1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0
+http://pear.php.net/dtd/tasks-1.0.xsd
+http://pear.php.net/dtd/package-2.0
+http://pear.php.net/dtd/package-2.0.xsd">
+
+  <name>bbcode</name>
+  <channel>pecl.php.net</channel>
+
+  <summary>BBCode parsing Extension</summary>
+
+  <description>
+  This is a quick and efficient BBCode Parsing Library.
+  It provides various tag types, high speed tree based parsing,
+  callback system, tag position restriction, Smiley Handling,
+  Subparsing
+  
+  It will force closing BBCode tags in the good order, and closing
+  terminating tags at the end of the string this is in order to ensure
+  HTML Validity in all case.
+  </description>
+
+  <lead>
+    <name>Xavier De Cock</name>
+    <user>void</user>
+    <email>void@php.net</email>
+    <active>yes</active>
+  </lead>
+
+  <date>2008-08-17</date>
+  <version>
+    <release>1.0.1</release>
+    <api>1.0.0</api>
+  </version>
+  <stability>
+    <release>stable</release>
+    <api>stable</api>
+  </stability>
+
+  <license filesource="/LICENSE">PHP / BSD</license>
+  
+  <notes>
+  	* Corrected a 64bit issue, int were used in place of long
+  	* Minor optimisations
+  	* Corrected Thread safe error when compiling (#14333)
+  	* Corrected MacOSX Header error (#14197)
+  	* Corrected PHP 5.3 ZVAL_ADDREF change
+  	* Corrected Callbacks where not freed when using object it was causing a segfault(#13603)
+  	* Updated bstrlib
+  </notes>
+
+  <contents>
+    <dir name="/">
+      <file role='doc' name='CREDITS'/>
+      <file role='doc' name='LICENSE'/>
+      <file role='doc' name='TODO'/>
+      <file role='src' name='config.m4'/>
+      <file role='src' name='php_bbcode.h'/>
+      <file role='src' name='php_bbcode.c'/>
+      <dir name="lib">
+        <file role='src' name='bbcode2.c'/>
+        <file role='src' name='bbcode2.h'/>
+        <file role='src' name='bstrlib.c'/>
+        <file role='src' name='bstrlib.h'/>
+      </dir>
+      <dir name="tests">
+        <file role='test' name='test_1.phpt'/>
+        <file role='test' name='test_2.phpt'/>
+        <file role='test' name='test_3.phpt'/>
+        <file role='test' name='test_4.phpt'/>
+        <file role='test' name='test_5.phpt'/>
+        <file role='test' name='test_6.phpt'/>
+        <file role='test' name='test_7.phpt'/>
+        <file role='test' name='test_8.phpt'/>
+        <file role='test' name='test_9.phpt'/>
+        <file role='test' name='test_10.phpt'/>
+        <file role='test' name='test_11.phpt'/>
+        <file role='test' name='test_12.phpt'/>
+        <file role='test' name='test_13.phpt'/>
+        <file role='test' name='test_14.phpt'/>
+        <file role='test' name='test_15.phpt'/>
+        <file role='test' name='test_16.phpt'/>
+        <file role='test' name='test_17.phpt'/>
+        <file role='test' name='test_18.phpt'/>
+        <file role='test' name='test_19.phpt'/>
+        <file role='test' name='test_20.phpt'/>
+        <file role='test' name='test_21.phpt'/>
+        <file role='test' name='test_22.phpt'/>
+        <file role='test' name='test_23.phpt'/>
+        <file role='test' name='test_24.phpt'/>
+      </dir>
+    </dir>
+  </contents>
+
+  <dependencies>
+    <required>
+      <php>
+        <min>5.2.0</min>
+      </php>
+      <pearinstaller>
+        <min>1.4.0a1</min>
+      </pearinstaller>
+    </required>
+  </dependencies>
+
+  <providesextension>bbcode</providesextension>
+  <extsrcrelease />
+</package>
