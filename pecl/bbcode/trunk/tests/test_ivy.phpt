@@ -2,8 +2,10 @@
 BBCODE No parse Test
 --FILE--
 <?php
-if (!extension_loaded("bbcode.so")){
-	dl("bbcode.so");
+if (!extension_loaded("bbcode")){
+	if (!dl('bbcode.so')){
+		die ('bbcode not loadable');
+	}
 }
 define("____page","");
 $text=<<<EOF
