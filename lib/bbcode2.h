@@ -77,7 +77,7 @@
     bstring close_tag=bfromcstr("[/"); \
     bconcat(close_tag,tag); \
     bcatcstr(close_tag,"]"); \
-    long sc_offset=binstrcaseless(string, next_close, close_tag); \
+    int sc_offset=binstrcaseless(string, next_close, close_tag); \
     if (sc_offset!=BSTR_ERR){ \
         bbcode_tree_push_tree_child(parser, bbcode_get_cn(parser), work_stack, close_stack, bmidstr(string, offset, end-offset+1),tag_id, argument, offset); \
         bbcode_tree_push_string_child(bbcode_get_cn(parser), bmidstr(string,next_close+1,sc_offset-next_close-1), offset+next_close+1); \
