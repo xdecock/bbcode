@@ -27,12 +27,14 @@
 #include "lib/bbcode2.h"
 #include "lib/bstrlib.h"
 
+#if Void_0
 typedef struct _bbcode_object {
 	zend_object     std;
-	long 			rsrc_id;
+	int 			rsrc_id;
 } bbcode_object;
+#endif
 
-long le_bbcode;
+int le_bbcode;
 static function_entry bbcode_functions[] = {
 	PHP_FE(bbcode_create, NULL)
 	PHP_FE(bbcode_add_element, NULL)
@@ -418,7 +420,7 @@ PHP_FUNCTION(bbcode_create)
     bbcode_parser_set_flags(parser, BBCODE_AUTO_CORRECT|BBCODE_ARG_DOUBLE_QUOTE|BBCODE_ARG_SINGLE_QUOTE|BBCODE_ARG_HTML_QUOTE|BBCODE_DEFAULT_SMILEYS_ON);
     /* If array given initialisation */
     if(bbcode_entry!=NULL){
-	    long i;
+	    int i;
 	    HashTable *myht=NULL;
 	    
 	    if (Z_TYPE_P(bbcode_entry) == IS_ARRAY) {
