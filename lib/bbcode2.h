@@ -269,10 +269,10 @@ struct _bbcode_validation_entry {
 /* Create and init a parser */
 bbcode_parser_p bbcode_parser_create();
 
-/* Destroy a parser and associated ressources */
+/* Destroy a parser and associated resources */
 void bbcode_parser_free(bbcode_parser_p parser);
 
-/* Destroy a parser and associated ressources */
+/* Destroy a parser and associated resources */
 void bbcode_parser_set_arg_parser(bbcode_parser_p parser,
 		bbcode_parser_p arg_parser);
 
@@ -351,7 +351,7 @@ void bbcode_smileys_add(bbcode_smiley_list_p list, bstring search,
 /* creates a BBcode list and init it */
 bbcode_list_p bbcode_list_create();
 
-/* free ressources for a BBCode list */
+/* free resources for a BBCode list */
 void bbcode_list_free(bbcode_list_p list);
 
 /* Check if there is room for a bbcode entry */
@@ -384,7 +384,7 @@ void bbcode_array_add(bbcode_array_p array, bbcode_p bbcode);
 /* Malloc a bbcode entry and init it */
 bbcode_p bbcode_entry_create();
 
-/* Free a bbcode entry ressources */
+/* Free a bbcode entry resources */
 void bbcode_entry_free(bbcode_p entry);
 
 /*---------------------------
@@ -393,7 +393,7 @@ void bbcode_entry_free(bbcode_p entry);
 /* Malloc a bbcode_allow_list and init it */
 bbcode_allow_list_p bbcode_allow_list_create();
 
-/* Free the ressources taken by an allow list */
+/* Free the resources taken by an allow list */
 void bbcode_allow_list_free(bbcode_allow_list_p list);
 
 /* Check for the size of an allow list */
@@ -414,7 +414,7 @@ long bbcode_allow_list_no_child(bbcode_allow_list_p list);
 /* Malloc and init a bbcode tree  */
 bbcode_parse_tree_p bbcode_tree_create();
 
-/* Free the ressources taken by a tree */
+/* Free the resources taken by a tree */
 void bbcode_tree_free(bbcode_parse_tree_p tree);
 
 /* Check if there is sufficient space in child array */
@@ -454,7 +454,7 @@ void bbcode_tree_move_childs(bbcode_parse_tree_p from, bbcode_parse_tree_p to,
 /* Create a Tree array */
 bbcode_parse_tree_array_p bbcode_parse_stack_create();
 
-/* Free ressource used by a Tree array */
+/* Free resource used by a Tree array */
 void bbcode_parse_stack_free(bbcode_parse_tree_array_p stack);
 
 /* Check if there is room for adding elements */
