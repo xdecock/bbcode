@@ -1,0 +1,20 @@
+TODO Version $Id$
+
+-- Callback --
+* Prepare some built-in callbacks
+  
+-- PHP Interface --
+* Implements an inheritable object interface (dunno who will inherit, but
+  i think there can't be a problem with it)
+* Drop the Bstrlib Dependency by Using PHP Internal String manipulation
+  facilities
+
+-- Code Cleanup & Documentation --
+* Provide Better Documentation for the bbcode lib
+* Try to remove duplicates code sections
+* Move Unecessary Loop operations outside a loop
+
+-- Enhancements --
+* Add Validator functionnality
+* Provide more fault tolerant code
+* Provide per tag fault handling modes
