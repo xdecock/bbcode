@@ -35,7 +35,7 @@ bbcode_parser_p bbcode_parser_create() {
 	return parser;
 }
 
-/* Destroy a parser and associated ressources */
+/* Destroy a parser and associated resources */
 void bbcode_parser_free(bbcode_parser_p parser) {
 	bbcode_list_free(parser->bbcodes);
 	bbcode_smileys_list_free(parser->smileys);
@@ -502,7 +502,7 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 		}
 		offset=end+1;
 	} while (offset<string_length);
-	/* Freeing ressources */
+	/* Freeing resources */
 	bdestroy(end_html);
 	bdestroy(end_double);
 	bdestroy(end_single);
@@ -913,7 +913,7 @@ void bbcode_apply_rules(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 			bconcat(parsed, tmp_string);
 		}
 	}
-	/* Freeing ressources */
+	/* Freeing resources */
 	bdestroy(last_string);
 	bdestroy(working_string);
 	bdestroy(arg);
@@ -1083,7 +1083,7 @@ bbcode_list_p bbcode_list_create() {
 	return list;
 }
 
-/* free ressources for a BBCode list */
+/* free resources for a BBCode list */
 void bbcode_list_free(bbcode_list_p list) {
 	if (list->root!=NULL) {
 		bbcode_entry_free(list->root);
@@ -1186,7 +1186,7 @@ bbcode_p bbcode_entry_create() {
 	return bbcode;
 }
 
-/* Free a bbcode entry ressources */
+/* Free a bbcode entry resources */
 void bbcode_entry_free(bbcode *entry) {
 	/* Freeing automaticaly started datas; */
 	/* All other stored datas must be freed by user */
@@ -1215,7 +1215,7 @@ bbcode_allow_list_p bbcode_allow_list_create() {
 	return list;
 }
 
-/* Free the ressources taken by an allow list */
+/* Free the resources taken by an allow list */
 void bbcode_allow_list_free(bbcode_allow_list_p list) {
 	if (list->msize > 0) {
 		free(list->id_list);
@@ -1307,7 +1307,7 @@ bbcode_parse_tree_p bbcode_tree_create() {
 	return tree;
 }
 
-/* Free the ressources taken by a tree */
+/* Free the resources taken by a tree */
 void bbcode_tree_free(bbcode_parse_tree_p tree) {
 	long i;
 	for (i=0; i < tree->childs.size; i++) {
@@ -1490,7 +1490,7 @@ bbcode_parse_tree_array_p bbcode_parse_stack_create() {
 	return array;
 }
 
-/* Free ressource used by a Tree array */
+/* Free resource used by a Tree array */
 void bbcode_parse_stack_free(bbcode_parse_tree_array_p stack) {
 	if (stack->element != NULL) {
 		free(stack->element);

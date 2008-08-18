@@ -40,6 +40,6 @@ PHP_FUNCTION(bbcode_set_arg_parser);
 extern zend_module_entry bbcode_module_entry;
 #define phpext_bbcode_ptr &bbcode_module_entry
 
-#define PHP_BBCODE_RES_NAME "BBCode ressource"
+#define PHP_BBCODE_RES_NAME "BBCode resource"
 
 #endif

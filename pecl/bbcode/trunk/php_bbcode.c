@@ -399,8 +399,8 @@ static void _php_bbcode_object_new(zend_class_entry *class_type, zend_object_han
 /* END OBJECT
  * }}} */
 #endif
-/* {{{ proto ressource bbcode_container bbcode_create([array initial_tags])
-   create a new bbcode_container and add elements given in the array to the ressource
+/* {{{ proto resource bbcode_container bbcode_create([array initial_tags])
+   create a new bbcode_container and add elements given in the array to the resource
    initial_tags is an associative array with tag_name=>tag_definition
    (see bbcode_add_element to view tag_definition format) */
 PHP_FUNCTION(bbcode_create)
@@ -462,7 +462,7 @@ PHP_FUNCTION(bbcode_create)
     ZEND_REGISTER_RESOURCE(return_value, parser, le_bbcode);
 }
 /* }}} */
-/* {{{ proto boolean bbcode_add_element(ressource bbcode_container, string tag_name , array tag_definition)
+/* {{{ proto boolean bbcode_add_element(resource bbcode_container, string tag_name , array tag_definition)
    add a new tag to the given bbcode_container
    tag_definition is an array with those elements:
    needed:
@@ -494,8 +494,8 @@ PHP_FUNCTION(bbcode_add_element)
 	RETURN_TRUE;
 }
 /* }}} */
-/* {{{ proto boolean bbcode_destroy(ressource bbcode_container)
-   free memory ressources of the given bbcode_container */
+/* {{{ proto boolean bbcode_destroy(resource bbcode_container)
+   free memory resources of the given bbcode_container */
 PHP_FUNCTION(bbcode_destroy)
 {
 	zval *z_bbcode_parser;
@@ -507,7 +507,7 @@ PHP_FUNCTION(bbcode_destroy)
 	RETURN_BOOL(zend_list_delete(Z_LVAL_P(z_bbcode_parser)) == SUCCESS);
 }
 /* }}} */
-/* {{{ proto string bbcode_parse(ressource bbcode_container, string to_parse)
+/* {{{ proto string bbcode_parse(resource bbcode_container, string to_parse)
    returns the bbcode parsed value of the to_parse string with definitions given by bbcode_container  */
 PHP_FUNCTION(bbcode_parse)
 {
@@ -529,7 +529,7 @@ PHP_FUNCTION(bbcode_parse)
 	free(ret_string);
 }
 /* }}} */
-/* {{{ proto boolean bbcode_add_smiley(ressource bbcode_container, string find, string replace)
+/* {{{ proto boolean bbcode_add_smiley(resource bbcode_container, string find, string replace)
    add a smiley find and replace ruleset */
 PHP_FUNCTION(bbcode_add_smiley)
 {
@@ -548,7 +548,7 @@ PHP_FUNCTION(bbcode_add_smiley)
 	RETURN_BOOL(SUCCESS);
 }
 /* }}} */
-/* {{{ proto boolean bbcode_set_flags(ressource bbcode_container, long flag, long mode)
+/* {{{ proto boolean bbcode_set_flags(resource bbcode_container, long flag, long mode)
    manage flags on parser using BBCODE_SET_FLAGS_* */
 PHP_FUNCTION(bbcode_set_flags)
 {
@@ -584,7 +584,7 @@ PHP_FUNCTION(bbcode_set_flags)
 	RETURN_BOOL(SUCCESS);
 }
 /* }}} */
-/* {{{ proto boolean bbcode_set_arg_parser(ressource bbcode_container, ressource bbcode_child)
+/* {{{ proto boolean bbcode_set_arg_parser(resource bbcode_container, resource bbcode_child)
    Sets a bbcode_argument_parser */
 PHP_FUNCTION(bbcode_set_arg_parser)
 {
