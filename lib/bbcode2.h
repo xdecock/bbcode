@@ -33,6 +33,7 @@
 #define BBCODE_ARG_DOUBLE_QUOTE    0x1
 #define BBCODE_ARG_SINGLE_QUOTE    0x2
 #define BBCODE_ARG_HTML_QUOTE      0x4
+#define BBCODE_ARG_QUOTE_ESCAPING  0x10
 #define BBCODE_AUTO_CORRECT        0x100
 #define BBCODE_CORRECT_REOPEN_TAGS 0x200
 #define BBCODE_DEFAULT_SMILEYS_ON  0x400
@@ -100,6 +101,7 @@
 		} \
 	} \
 }
+#define bbcode_max(a,b) ((a>b)?a:b) 
 
 typedef struct _bbcode_smiley bbcode_smiley;
 typedef struct _bbcode_smiley * bbcode_smiley_p;
@@ -316,7 +318,7 @@ void bbcode_close_tag(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 		long tag_id, bstring close_string, int true_close, int offset);
 
 /* This make some basic corrections to a given tree */
-long bbcode_correct_tree(bbcode_parser_p parser, bbcode_parse_tree_p tree,
+int bbcode_correct_tree(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 		long parent_id, char force_false);
 
 /* This apply the BBCode rules to generate the final string */
@@ -475,6 +477,12 @@ bbcode_parse_tree_child_p bbcode_tree_child_create();
 
 /* Free a tree child */
 void bbcode_tree_child_destroy(bbcode_parse_tree_child_p child);
+
+/* Check if a string is escaped */
+int bbcode_is_escaped(bstring string, int pos);
+
+/* Remove escaped strings */
+int bbcode_strip_escaping(bstring string);
 
 /*---------------------------
  Built-in callbacks

@@ -23,7 +23,7 @@ Line 6 étant les rois de la simulation d'ampli, la firme s'oriente donc avec ce
 De la taille d'un simple accordeur, le Pod pocket est tout de même ultra complet. En effet, il possède à son menu 32 modélisations d'amplis, 16 baffles et pas moins de 16 effets intégrés. Vous ne rêvez pas, vous vous dites il est si petit mais offre-t-il  les mêmes capacités que le Pod II ? et bien oui !<br />
 Et tenez vous bien, il marche à piles (pour se la jouer rebelz sur la plage... :p) ou sur secteur (pour vous perfectionner avant de vous la jouer sur la plage...:p). Donc que vous soyez frimeur à montrer vos 4 accords aux potes en exterieur espérant attirer les demoiselles, ou que vous soyez enfermé dans votre cagibi depuis 2 mois jonglant entre la carte son du pc et votre guitare, il vous est déstiné et vous simplifira certainement les choses.[/color][/quote][/center][/just]<br />
 <br />
-[just][center][size=16][color=red][b][u]Voici les données constructeur :[/u][/b][/color][/size][/center][/just]<br />
+[just][center][size=16][color=red][b][u][just][center][round][color=lightblue][b][u]Voici les données constructeur :[/just][/center][/size][/color][/b][/u][/just][/center][/round][/color][/b][/u]<br />
 <br />
 [just][center][round][color=lightblue][b][u]Caractéristiques :[/u][/b][/color]<br />
 [list]<br />
@@ -95,7 +95,7 @@ infos tirées des sites suivants :<br />
 [/round][/center][/just] <br />
 <br />
 [just][center][size=16][color=blue][u][border]Questions :[/border][/u][/color][/size]<br />
-[list][color=blue]<br />
+[list][color="blue]<br />
 [*] Pour vous ce type d'appareil est-il indispensable ?<br />
 [*] Selon vous c'est une innovation ou une remasterisation ?<br />
 [*] Le trouvez vous pratique de par sa taille et ses capacités ?[/color]<br />

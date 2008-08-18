@@ -362,9 +362,11 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 	char quote_double=parser->options & BBCODE_ARG_DOUBLE_QUOTE;
 	char quote_single=parser->options & BBCODE_ARG_SINGLE_QUOTE;
 	char quote_html=parser->options & BBCODE_ARG_HTML_QUOTE;
+	char escaping_enabled=parser->options & BBCODE_ARG_QUOTE_ESCAPING;
 	char added=0;
-	int offset, end, next_equal, next_close, string_length; 
+	int offset, end, next_equal, next_close, string_length;
 	long tag_id;
+	int quote_enabled=(quote_double || quote_single || quote_html);
 	string_length=blength(string);
 	tag_id=end=next_equal=next_close=0;
 	end_double=bfromcstr("\"]");
@@ -391,20 +393,23 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 					/* With Arg */
 					if (next_equal<next_close) {
 						tag = bmidstr(string, offset+1, next_equal-offset-1);
+						/* Finding tag_id */
 						if (BBCODE_ERR!=(tag_id=bbcode_get_tag_id(parser, tag,
 										1))) {
-							if (quote_double || quote_single || quote_html) {
+							/* Quotes */
+							if (quote_enabled) {
 								end=next_close;
 								no_quote=0;
 								int diff=0;
 								if (quote_single && bchar(string, next_equal+1)
-								=='\'') {
+									=='\'') {
 									end_quote=end_single;
 								} else if (quote_double && bchar(string,
 										next_equal+1)=='"') {
 									end_quote=end_double;
 									
 								} else {
+									/* support HTML Quotes */
 									if (quote_html) {
 										bstring to_comp=bmidstr(string, next_equal+1,
 												blength(html_quote));
@@ -423,20 +428,33 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 										no_quote=1;
 									}
 								}
+								/* We have a quote, delete the ending quote */
 								if (!no_quote) {
-									end=binstrcaseless(string,next_equal+1, end_quote);
+									int next_pos=next_equal;
+									do {
+										next_pos=end=binstrcaseless(string, next_pos+1, end_quote);
+									} while (escaping_enabled && bbcode_is_escaped(string,end));
 									if (end != BSTR_ERR) {
 										argument=bmidstr(string, next_equal+2+diff,
 												end++ - next_equal - 2-diff);
+										/* removing escaping from argument */
+										if (escaping_enabled){
+											bbcode_strip_escaping(argument);
+										}
+										next_close=end+diff;
 									} else {
-										end=string_length+5;
+										/* No Ending Quote, go to next tag */
+										end=next_equal+diff;
+										bdestroy(argument);
+										argument=NULL;
 									}
-									next_close=end+diff;
 								}
 							} else {
+								/* Quotes are not supported */
 								argument=bmidstr(string, next_equal+1,
 										next_close-next_equal-1);
 							}
+							/* We have an argument */
 							if (argument!=NULL) {
 								if (bbcode_allow_list_no_child(bbcode_get_bbcode(parser,tag_id)->childs)) {
 									BBCODE_SPECIAL_CASE_NO_CHILD(argument)
@@ -452,6 +470,7 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 								}
 							}
 						} else {
+							/* No tag found */
 							end=next_close;
 						}
 					} else {
@@ -489,6 +508,7 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 			}
 		}
 		if (!added) {
+			/* No element added to the tree, we add raw string */
 			end=bstrchrp(string, '[', offset+1);
 			if (end<0) {
 				end=string_length;
@@ -635,11 +655,12 @@ void bbcode_close_tag(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 }
 
 /* This make some basic corrections to a given tree */
-long bbcode_correct_tree(bbcode_parser_p parser, bbcode_parse_tree_p tree,
+int bbcode_correct_tree(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 		long parent_id, char force_false) {
-	int autocorrect, orig_parent;
-	int i, ret;
+	int autocorrect, orig_parent, ret;
+	long i,j;
 	bbcode_p tag= bbcode_get_bbcode(parser,tree->tag_id);
+	/* Options */
 	autocorrect = parser->options & BBCODE_AUTO_CORRECT;
 	if (bbcode_allow_list_check_access(tag->parents, parent_id)==0) {
 		force_false = 1;
@@ -674,7 +695,6 @@ long bbcode_correct_tree(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 			child_tree=child->tree;
 			if (((child_tree->flags & BBCODE_TREE_FLAGS_MULTIPART) !=0)
 					&& ((child_tree->flags & BBCODE_TREE_FLAGS_MULTIPART_DONE) ==0)) {
-				long j;
 				for (j=0; j<child_tree->multiparts->size; j++){
 					if (((child_tree->multiparts->element[j])->tag_id == BBCODE_TREE_ROOT_TAGID)) {
 						continue;
@@ -1550,6 +1570,19 @@ bbcode_parse_tree_child_p bbcode_tree_child_create(){
 /* Free a tree child */
 void bbcode_tree_child_destroy(bbcode_parse_tree_child_p child){
 	free(child);
+}
+/* Check if a char is escaped */
+int bbcode_is_escaped(bstring string, int pos){
+	return bchar(string, pos--)=='\\' && !bbcode_is_escaped(string,pos);
+}
+/* Remove escaped strings */
+int bbcode_strip_escaping(bstring string){
+	int i;
+	for (i=0; i<blength(string); ++i){
+		if (bchar(string,i)=='\\'){
+			bdelete(string, i, 1);
+		}
+	}
 }
 
 /* void main() {
