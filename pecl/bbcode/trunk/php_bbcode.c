@@ -80,11 +80,11 @@ ZEND_GET_MODULE(bbcode)
 
 /* {{{ _php_bbcode_handling_content */
 /* Start user functions callback */
-long _php_bbcode_handling_content(bstring content, bstring param, void *datas){
+int _php_bbcode_handling_content(bstring content, bstring param, void *datas){
 	zval *retval = NULL;
 	zval ***zargs = NULL;
 	zval **funcname;
-	long i, res;
+	int i, res;
 	char *callable = NULL, *errbuf=NULL;
 	funcname = ((zval **) datas);
 	TSRMLS_FETCH();
@@ -132,11 +132,11 @@ long _php_bbcode_handling_content(bstring content, bstring param, void *datas){
 }
 /* }}} */
 /* {{{ _php_bbcode_handling_param */
-long _php_bbcode_handling_param(bstring content, bstring param, void *datas){
+int _php_bbcode_handling_param(bstring content, bstring param, void *datas){
 	zval *retval = NULL;
 	zval ***zargs = NULL;
 	zval **funcname;
-	long i, res;
+	int i, res;
 	char *callable = NULL, *errbuf=NULL;
 	funcname = ((zval **) datas);
 	TSRMLS_FETCH();
@@ -188,20 +188,20 @@ long _php_bbcode_handling_param(bstring content, bstring param, void *datas){
 /* Fill a bbcode_container */
 static void _php_bbcode_add_element(bbcode_parser_p parser, char *tag_name, zval *content TSRMLS_DC) {
 	zval **e;
-	char type;
+	long type;
 	char *name;
 	char empty[]="";
 	char all[]="all";
-	long (*content_handling_func)(bstring content, bstring param, void *func_data)=NULL;
-	long (*param_handling_func)(bstring content, bstring param, void *func_data)=NULL;
+	int (*content_handling_func)(bstring content, bstring param, void *func_data)=NULL;
+	int (*param_handling_func)(bstring content, bstring param, void *func_data)=NULL;
     HashTable *ht=NULL;
     long flags=0;
 	char *childs=all;
-	long childs_len=3;
+	int childs_len=3;
 	char *parents=all;
-	long parents_len=3;
+	int parents_len=3;
 	char *open_tag, *close_tag, *default_arg;
-	long open_tag_len, close_tag_len, default_arg_len;
+	int open_tag_len, close_tag_len, default_arg_len;
 	open_tag_len = close_tag_len = default_arg_len = 0;
 	zval **content_handling = NULL;
 	zval **param_handling = NULL;
@@ -484,7 +484,7 @@ PHP_FUNCTION(bbcode_add_element)
 	zval *bbcode_entry=NULL;
 	bbcode_parser_p parser=NULL;
 	char *tag_name;
-	long tag_len;
+	int tag_len;
 	
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rsa", &z_bbcode_parser, &tag_name, &tag_len, &bbcode_entry) == FAILURE) {
         RETURN_NULL();
@@ -514,9 +514,9 @@ PHP_FUNCTION(bbcode_parse)
 	zval *z_bbcode_parser;
 	bbcode_parser_p parser;
 	unsigned char *string;
-	unsigned long str_len;
-	long ret_size;
+	int str_len;
 	char *ret_string;
+	int ret_size;
 	
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rs", &z_bbcode_parser, &string, &str_len) == FAILURE) {
         RETURN_NULL();
@@ -535,7 +535,7 @@ PHP_FUNCTION(bbcode_add_smiley)
 {
 	zval *z_bbcode_parser;
 	char *search, *replace;
-	long s_len, r_len;
+	int s_len, r_len;
 	bbcode_parser_p parser=NULL;
 	
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rss", &z_bbcode_parser, &search, &s_len, &replace, &r_len) == FAILURE) {
