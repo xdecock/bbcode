@@ -481,7 +481,7 @@ PHP_FUNCTION(bbcode_create)
 PHP_FUNCTION(bbcode_add_element)
 {
 	zval *z_bbcode_parser;
-	zval *bbcode_entry=NULL;
+	zval *bbcode_entry;
 	bbcode_parser_p parser=NULL;
 	char *tag_name;
 	int tag_len;
@@ -513,7 +513,7 @@ PHP_FUNCTION(bbcode_parse)
 {
 	zval *z_bbcode_parser;
 	bbcode_parser_p parser;
-	unsigned char *string;
+	char *string;
 	int str_len;
 	char *ret_string;
 	int ret_size;
