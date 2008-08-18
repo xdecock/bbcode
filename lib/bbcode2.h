@@ -192,8 +192,8 @@ struct _bbcode {
 	bbcode_allow_list_p childs;
 	void *param_handling_func_data;
 	void *content_handling_func_data;
-	long (*param_handling_func)(bstring content, bstring param, void *func_data);
-	long (*content_handling_func)(bstring content, bstring param,
+	int (*param_handling_func)(bstring content, bstring param, void *func_data);
+	int (*content_handling_func)(bstring content, bstring param,
 			void *func_data);
 };
 
@@ -277,22 +277,22 @@ void bbcode_parser_set_arg_parser(bbcode_parser_p parser,
 		bbcode_parser_p arg_parser);
 
 /* Constructs and add a bbcode_element to the parser */
-void bbcode_parser_add_ruleset(bbcode_parser_p parser, char type, long flags,
-		char *tag, long tag_size,
-		char *open_tag, long open_tag_size, char *close_tag, long close_tag_size,
-		char *default_arg, long default_arg_size, char *parent_list,
-		long parent_list_size, char *child_list, long child_list_size, 
-		long (*param_handling_func)(bstring content, bstring param, void *func_data), 
-		long (*content_handling_func)(bstring content, bstring param, void *func_data),
+void bbcode_parser_add_ruleset(bbcode_parser_p parser, long type, long flags,
+		char *tag, int tag_size,
+		char *open_tag, int open_tag_size, char *close_tag, int close_tag_size,
+		char *default_arg, int default_arg_size, char *parent_list,
+		int parent_list_size, char *child_list, int child_list_size, 
+		int (*param_handling_func)(bstring content, bstring param, void *func_data), 
+		int (*content_handling_func)(bstring content, bstring param, void *func_data),
 		void *param_handling_func_data, void *content_handling_func_data);
 
 /* Construct and add a smiley to the parser */
 void bbcode_parser_add_smiley(bbcode_parser_p parser, char *smiley_search,
-		long smiley_search_size, char *smiley_replace, long smiley_replace_size);
-
+		int smiley_search_size, char *smiley_replace, int smiley_replace_size);
+	
 /* Parse a BBCoded string to is treated equivalent */
-char *bbcode_parse(bbcode_parser_p parser, unsigned char *string, unsigned long string_size,
-		long *result_size);
+char *bbcode_parse(bbcode_parser_p parser, char *string, int string_size,
+		int *result_size);
 
 /* Get current options of the bbcode_parser */
 long bbcode_parser_get_flags(bbcode_parser_p parser);
@@ -313,7 +313,7 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 /* This closes an active tag */
 void bbcode_close_tag(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 		bbcode_parse_tree_array_p work, bbcode_parse_tree_array_p close,
-		long tag_id, bstring close_string, long true_close, long offset);
+		long tag_id, bstring close_string, int true_close, int offset);
 
 /* This make some basic corrections to a given tree */
 long bbcode_correct_tree(bbcode_parser_p parser, bbcode_parse_tree_p tree,
