@@ -500,6 +500,7 @@ bbCode($text);
 bbCode($text);
 bbCode($text);
 bbcode_destroy($BBHandler);
+echo "Nothing";
 ?>
 --EXPECT--
 Nothing
