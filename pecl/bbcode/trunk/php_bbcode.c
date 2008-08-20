@@ -91,7 +91,7 @@ int _php_bbcode_handling_content(bstring content, bstring param, void *datas){
 
 	if (!zend_is_callable(*funcname, 0, &callable)) {
 		spprintf(&errbuf, 0, "function `%s' is not a function name", callable);
-		zend_error(E_WARNING, "[BBCode] (_php_bbcode_handling_content) %s", errbuf);
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "%s", errbuf);
 		efree(errbuf);
 		efree(callable);
 		return 0;
@@ -116,7 +116,7 @@ int _php_bbcode_handling_content(bstring content, bstring param, void *datas){
 			efree(zargs);
 		}
 	} else {
-		zend_error(E_WARNING, "[BBCode] (_php_bbcode_handling_content) call_user_function_ex failed for function %s()", callable);
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "call_user_function_ex failed for function %s()", callable);
 	}
 	efree(callable);
 	if (&retval) {
@@ -143,7 +143,7 @@ int _php_bbcode_handling_param(bstring content, bstring param, void *datas){
 
 	if (!zend_is_callable(*funcname, 0, &callable)) {
 		spprintf(&errbuf, 0, "function `%s' is not a function name", callable);
-		zend_error(E_WARNING, "[BBCode] (_php_bbcode_handling_param) %s", errbuf);
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "%s", errbuf);
 		efree(errbuf);
 		efree(callable);
 		return 0;
@@ -168,7 +168,7 @@ int _php_bbcode_handling_param(bstring content, bstring param, void *datas){
 			efree(zargs);
 		}
 	} else {
-		zend_error(E_WARNING, "[BBCode] (_php_bbcode_handling_param) call_user_function_ex failed for function %s()", callable);
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "call_user_function_ex failed for function %s()", callable);
 	}
 	efree(callable);
 	if (&retval) {
@@ -217,7 +217,7 @@ static void _php_bbcode_add_element(bbcode_parser_p parser, char *tag_name, zval
 			&& (Z_TYPE_PP(e) == IS_LONG)) {
 		type = Z_LVAL_PP(e);
 	} else {
-		zend_error(E_WARNING, "[BBCode] (bbcode_add_element) No type specified for tag : [%s]",tag_name);
+		php_error_docref(NULL TSRMLS_CC, E_WARNING, "No type specified for tag : [%s]",tag_name);
 		return;
 	}
 	if ((SUCCESS == zend_hash_find(ht, "open_tag", sizeof("open_tag"), (void *) &e))
@@ -416,7 +416,7 @@ PHP_FUNCTION(bbcode_create)
     /* Container init */
     parser=bbcode_parser_create();
     if (parser==NULL){
-		zend_error(E_ERROR, "[BBCode] (bbcode_create) Unable to allocate memory for tag_stack");
+		php_error_docref(NULL TSRMLS_CC, E_ERROR, "Unable to allocate memory for tag_stack");
     }
     bbcode_parser_set_flags(parser, BBCODE_AUTO_CORRECT|BBCODE_ARG_DOUBLE_QUOTE|BBCODE_ARG_SINGLE_QUOTE|BBCODE_ARG_HTML_QUOTE|BBCODE_DEFAULT_SMILEYS_ON);
     /* If array given initialisation */
