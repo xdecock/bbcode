@@ -106,7 +106,6 @@ int _php_bbcode_handling_content(bstring content, bstring param, void *datas){
 	ZVAL_STRINGL(*zargs[1], bdata(param), blength(param), 1);
 
 	res = call_user_function_ex(EG(function_table), NULL, *funcname, &retval, 2, zargs, 1, NULL TSRMLS_CC);
-	zval_ptr_dtor(funcname);
 
 	if (res == SUCCESS) {
 		if (zargs) {
@@ -159,7 +158,6 @@ int _php_bbcode_handling_param(bstring content, bstring param, void *datas){
 	ZVAL_STRINGL(*zargs[1], bdata(param), blength(param), 1);
 
 	res = call_user_function_ex(EG(function_table), NULL, *funcname, &retval, 2, zargs, 1, NULL TSRMLS_CC);
-	zval_ptr_dtor(funcname);
 
 	if (res == SUCCESS) {
 		if (zargs) {
