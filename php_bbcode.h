@@ -2,7 +2,7 @@
   +----------------------------------------------------------------------+
   | PHP Version 5                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-2007 The PHP Group                                |
+  | Copyright (c) 1997-2008 The PHP Group                                |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -14,32 +14,31 @@
   +----------------------------------------------------------------------+
   | Author: Xavier De Cock <void@php.net>                                |
   +----------------------------------------------------------------------+
-
-  $Id$ 
 */
-#ifndef PHP_BBCODE_H
-#define PHP_BBCODE_H 1
 
-#define PHP_BBCODE_VERSION "1.0.2"
+/* $Id$ */
+
+#ifndef PHP_BBCODE_H
+#define PHP_BBCODE_H
+
+#define PHP_BBCODE_VERSION "1.1.0-dev"
 #define PHP_BBCODE_EXTNAME "bbcode"
+#define PHP_BBCODE_RES_NAME "BBCode resource"
 
 #define BBCODE_SET_FLAGS_SET	0
 #define BBCODE_SET_FLAGS_ADD	1
 #define BBCODE_SET_FLAGS_REMOVE 2
 
-PHP_MINIT_FUNCTION(bbcode);
-PHP_MINFO_FUNCTION(bbcode);
-PHP_FUNCTION(bbcode_create);
-PHP_FUNCTION(bbcode_add_element);
-PHP_FUNCTION(bbcode_destroy);
-PHP_FUNCTION(bbcode_parse);
-PHP_FUNCTION(bbcode_add_smiley);
-PHP_FUNCTION(bbcode_set_flags);
-PHP_FUNCTION(bbcode_set_arg_parser);
-
 extern zend_module_entry bbcode_module_entry;
 #define phpext_bbcode_ptr &bbcode_module_entry
 
-#define PHP_BBCODE_RES_NAME "BBCode resource"
-
 #endif
+
+/*
+ * Local variables:
+ * tab-width: 4
+ * c-basic-offset: 4
+ * End:
+ * vim600: noet sw=4 ts=4 fdm=marker
+ * vim<600: noet sw=4 ts=4
+ */
