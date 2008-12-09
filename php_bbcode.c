@@ -33,6 +33,12 @@ static int le_bbcode;
 #define PHP_BBCODE_CONTENT_CB 1
 #define PHP_BBCODE_PARAM_CB   2
 
+#if (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION > 2) || PHP_MAJOR_VERSION > 5
+# define PHP_BBCODE_CALLABLE TSRMLS_CC
+#else
+# define PHP_BBCODE_CALLABLE
+#endif
+
 /* {{{ _php_bbcode_callback_handler
    Common code for content and parameter handlers */
 static int _php_bbcode_callback_handler(int cb_type, bstring content, bstring param, zval *func_name)
@@ -66,7 +72,7 @@ static int _php_bbcode_callback_handler(int cb_type, bstring content, bstring pa
 	res = call_user_function_ex(EG(function_table), NULL, func_name, &retval, 2, zargs, 1, NULL TSRMLS_CC);
 	
 	if (res != SUCCESS) {
-		if (!zend_is_callable(func_name, 0, &callable)) {
+		if (!zend_is_callable(func_name, 0, &callable PHP_BBCODE_CALLABLE)) {
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "function `%s' is not callable", callable);
 		} else {
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "callback function %s() failed", callable);
@@ -188,7 +194,7 @@ static void _php_bbcode_add_element(bbcode_parser_p parser, char *tag_name, int 
 		if (Z_TYPE_PP(e) != IS_STRING && Z_TYPE_PP(e) != IS_ARRAY){
 			convert_to_string_ex(e);
 		}
-		if (!zend_is_callable(*e, 0, &callback_name)) {
+		if (!zend_is_callable(*e, 0, &callback_name PHP_BBCODE_CALLABLE)) {
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "First argument is expected to be a valid callback, '%s' was given", callback_name);
 			efree(callback_name);
 			return;
@@ -209,7 +215,7 @@ static void _php_bbcode_add_element(bbcode_parser_p parser, char *tag_name, int 
 		if (Z_TYPE_PP(e) != IS_STRING && Z_TYPE_PP(e) != IS_ARRAY){
 			convert_to_string_ex(e);
 		}
-		if (!zend_is_callable(*e, 0, &callback_name)) {
+		if (!zend_is_callable(*e, 0, &callback_name PHP_BBCODE_CALLABLE)) {
 			php_error_docref(NULL TSRMLS_CC, E_WARNING, "First argument is expected to be a valid callback, '%s' was given", callback_name);
 			efree(callback_name);
 			return;
