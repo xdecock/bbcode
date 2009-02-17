@@ -445,8 +445,6 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 									} else {
 										/* No Ending Quote, go to next tag */
 										end=next_equal+diff;
-										bdestroy(argument);
-										argument=NULL;
 									}
 								}
 							} else {
@@ -465,6 +463,7 @@ void bbcode_build_tree(bbcode_parser_p parser, bstring string,
 															+1), tag_id,
 											argument, offset);
 									bdestroy(argument);
+									argument=NULL;
 									end=next_close;
 									added=1;
 								}
