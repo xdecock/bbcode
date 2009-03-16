@@ -58,6 +58,7 @@ http://pear.php.net/dtd/package-2.0.xsd">
       <file role='doc' name='LICENSE'/>
       <file role='doc' name='TODO'/>
       <file role='src' name='config.m4'/>
+      <file role='src' name='config.w32'/>
       <file role='src' name='php_bbcode.h'/>
       <file role='src' name='php_bbcode.c'/>
       <dir name="lib">
