@@ -601,7 +601,7 @@ static PHP_MINFO_FUNCTION(bbcode)
 }
 /* }}} */
 
-static function_entry bbcode_functions[] = { /* {{{ */
+static zend_function_entry bbcode_functions[] = { /* {{{ */
 	PHP_FE(bbcode_create,         NULL)
 	PHP_FE(bbcode_add_element,    NULL)
 	PHP_FE(bbcode_destroy,        NULL)
