@@ -125,6 +125,7 @@ static void _php_bbcode_add_element(bbcode_parser_p parser, char *tag_name, int 
 	char *parents = all;
 	int parents_len = 3;
 	char *open_tag, *close_tag, *default_arg;
+	long max_parsed=-1;
 	int open_tag_len = 0, close_tag_len = 0, default_arg_len = 0;
 	zval *content_handling = NULL;
 	zval *param_handling = NULL;
@@ -178,6 +179,13 @@ static void _php_bbcode_add_element(bbcode_parser_p parser, char *tag_name, int 
 		default_arg_len = Z_STRLEN_PP(e);
 	} else {
 		default_arg = empty;
+	}
+
+	/* max_parsed */
+	if ((SUCCESS == zend_hash_find(ht, "max", sizeof("max"), (void *) &e)) &&
+		(Z_TYPE_PP(e) == IS_LONG)
+	) {
+		max_parsed = Z_LVAL_PP(e);
 	}
 
 	/* content_handling */
@@ -244,7 +252,7 @@ static void _php_bbcode_add_element(bbcode_parser_p parser, char *tag_name, int 
 		close_tag, close_tag_len,
 		default_arg, default_arg_len,
 		parents, parents_len,
-		childs, childs_len, 
+		childs, childs_len, max_parsed,
 		param_handling_func,
 		content_handling_func,
 		(void *)param_handling,

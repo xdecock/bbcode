@@ -1,9 +1,9 @@
 /*
  * This source file is part of the bbcode library.
- * Written and maintained by Xavier De Cock 2006-2007
+ * Written and maintained by Xavier De Cock 2006-2010
  * Licensed under the BSD License Terms
  * Refer to the accompanying documentation for details on usage and license.
- * See also: Company Website: http://www.bmco.be/
+ * See also: Company Website: http://www.nxdomain.be/
  * See also: Hosted on pecl: http://pecl.php.net/
  * Leave this header As Is, add your name as maintainer, and please, contribute
  * enhancement back to the community
@@ -185,6 +185,7 @@ struct _bbcode {
 	char type;
 	long flags;
 	char speed_cache;
+	long max_parsed;
 	bstring tag;
 	bstring open_tag;
 	bstring close_tag;
@@ -219,6 +220,7 @@ struct _bbcode_parser {
 	bstring content_replace;
 	bstring arg_replace;
 	long options;
+	long *tag_counter;
 };
 
 /* This is the parse tree temporary data store */
@@ -284,7 +286,7 @@ void bbcode_parser_add_ruleset(bbcode_parser_p parser, long type, long flags,
 		char *tag, int tag_size,
 		char *open_tag, int open_tag_size, char *close_tag, int close_tag_size,
 		char *default_arg, int default_arg_size, char *parent_list,
-		int parent_list_size, char *child_list, int child_list_size, 
+		int parent_list_size, char *child_list, int child_list_size, long max_parsed,
 		int (*param_handling_func)(bstring content, bstring param, void *func_data), 
 		int (*content_handling_func)(bstring content, bstring param, void *func_data),
 		void *param_handling_func_data, void *content_handling_func_data);
