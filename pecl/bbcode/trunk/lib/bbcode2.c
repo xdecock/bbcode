@@ -1,9 +1,9 @@
 /*
  * This source file is part of the bbcode library.
- * Written and maintained by Xavier De Cock 2006-2007
+ * Written and maintained by Xavier De Cock 2006-2010
  * Licensed under the BSD License Terms
  * Refer to the accompanying documentation for details on usage and license.
- * See also: Company Website: http://www.bmco.be/
+ * See also: Company Website: http://www.nxdomain.be/
  * See also: Hosted on pecl: http://pecl.php.net/
  * Leave this header As Is, add your name as maintainer, and please, contribute
  * enhancement back to the community
@@ -55,7 +55,7 @@ void bbcode_parser_add_ruleset(bbcode_parser_p parser, long type, long flags,
 		char *tag, int tag_size,
 		char *open_tag, int open_tag_size, char *close_tag, int close_tag_size,
 		char *default_arg, int default_arg_size, char *parent_list,
-		int parent_list_size, char *child_list, int child_list_size, 
+		int parent_list_size, char *child_list, int child_list_size, long max_parsed,
 		int (*param_handling_func)(bstring content, bstring param, void *func_data), 
 		int (*content_handling_func)(bstring content, bstring param, void *func_data),
 		void *param_handling_func_data, void *content_handling_func_data) {
@@ -66,6 +66,7 @@ void bbcode_parser_add_ruleset(bbcode_parser_p parser, long type, long flags,
 		entry=bbcode_entry_create();
 	}
 	entry->type=type;
+	entry->max_parsed=max_parsed;
 	entry->flags=flags;
 	entry->tag=blk2bstr(tag, tag_size);
 	entry->open_tag=blk2bstr(open_tag, open_tag_size);
@@ -96,6 +97,7 @@ void bbcode_parser_add_smiley(bbcode_parser_p parser, char *smiley_search,
 char *bbcode_parse(bbcode_parser_p parser, char *string, int string_size,
 		int *result_size) {
 	char *return_value;
+	int i;
 
 	bstring to_parse = NULL;
 	bstring parsed = NULL;
@@ -135,7 +137,13 @@ char *bbcode_parse(bbcode_parser_p parser, char *string, int string_size,
 		/* Reset the working string */
 		bassigncstr(to_parse, "");
 		/* Apply the Output Rules */
+		parser->tag_counter=(long *)malloc(bbcode_array_length(parser->bbcodes->bbcodes)*sizeof(long));
+		for (i=0; i<bbcode_array_length(parser->bbcodes->bbcodes); ++i) {
+			parser->tag_counter[i]=0;
+		}
 		bbcode_apply_rules(parser, tree, to_parse);
+		free(parser->tag_counter);
+		parser->tag_counter=NULL;
 		/* Destroy Tree */
 		bbcode_tree_free(tree);
 	}
@@ -188,9 +196,12 @@ void bbcode_prepare_tag_list(bbcode_parser_p parser) {
 	if (parser->options & BBCODE_DEFAULT_SMILEYS_ON) {
 		default_smileys=1;
 	}
-
+	
 	max=0;
 	list=parser->bbcodes;
+	if (list->options & BBCODE_LIST_IS_READY ) {
+		return;
+	}
 	/* Resolve cache preparation */
 	for (i=0; i<bbcode_array_length(list->bbcodes); i++) {
 		bbcode=bbcode_get_bbcode(parser, i);
@@ -904,55 +915,78 @@ void bbcode_apply_rules(bbcode_parser_p parser, bbcode_parse_tree_p tree,
 			bassign(parsed, tree->open_string);
 			bconcat(parsed, working_string);
 		} else {
-			bassign(parsed, tag->open_tag);
-			arg=bfromcstr("");
-			if (tag->speed_cache & BBCODE_CACHE_ACCEPT_ARG){
-				if (blength(tree->argument)>0){
-					bassign(arg,tree->argument);
-				} else {
-					bassign(arg, tag->default_arg);
+			if (tree->tag_id>=0 && tag->max_parsed>0 && (parser->tag_counter[tree->tag_id])>=tag->max_parsed) {
+				bassign(parsed, tree->open_string);
+				bconcat(parsed, working_string);
+				bconcat(parsed, tree->close_string);
+			} else {
+				bassign(parsed, tag->open_tag);
+				arg=bfromcstr("");
+				if (tree->tag_id>=0) {
+					++parser->tag_counter[tree->tag_id];
 				}
-				if (tag->flags & BBCODE_FLAGS_ARG_PARSING){
-					bbcode_parser_p arg_parser;
-					char *string_output;
-					int string_size;
-					if (parser->argument_parser != NULL){
-						arg_parser=parser->argument_parser;
+				if (tag->speed_cache & BBCODE_CACHE_ACCEPT_ARG){
+					if (blength(tree->argument)>0){
+						bassign(arg,tree->argument);
 					} else {
-						arg_parser=parser;
+						bassign(arg, tag->default_arg);
 					}
-					string_output=bbcode_parse(arg_parser, arg->data, arg->slen, &string_size);
-					bdestroy(arg);
-					arg=blk2bstr(string_output, string_size);
-					free(string_output);
+					if (tag->flags & BBCODE_FLAGS_ARG_PARSING){
+						bbcode_parser_p arg_parser;
+						char *string_output;
+						int string_size;
+						int j;
+						long *tag_counter=NULL;
+						if (parser->argument_parser != NULL){
+							arg_parser=parser->argument_parser;
+						} else {
+							arg_parser=parser;
+							tag_counter=parser->tag_counter;
+							arg_parser->tag_counter=(long *)malloc(bbcode_array_length(arg_parser->bbcodes->bbcodes)*sizeof(long));
+							for (j=0; j<bbcode_array_length(arg_parser->bbcodes->bbcodes); ++j) {
+								arg_parser->tag_counter[j]=0;
+							}
+						}
+						string_output=bbcode_parse(arg_parser, arg->data, arg->slen, &string_size);
+						if (parser->argument_parser != NULL) {
+							free(arg_parser->tag_counter);
+						} else {
+							free(arg_parser->tag_counter);
+							parser->tag_counter=tag_counter;
+							tag_counter=NULL;
+						}
+						bdestroy(arg);
+						arg=blk2bstr(string_output, string_size);
+						free(string_output);
+					}
 				}
-			}
-			/* Callbacks - 1/ Content_callback */
-			if (tag->content_handling_func != NULL){
-				tag->content_handling_func(working_string, arg, tag->content_handling_func_data);
-			}
-			/* Callbacks - 2/ Param callback */
-			if (tag->param_handling_func != NULL){
-				tag->param_handling_func(working_string, arg, tag->param_handling_func_data);
-			}
+				/* Callbacks - 1/ Content_callback */
+				if (tag->content_handling_func != NULL){
+					tag->content_handling_func(working_string, arg, tag->content_handling_func_data);
+				}
+				/* Callbacks - 2/ Param callback */
+				if (tag->param_handling_func != NULL){
+					tag->param_handling_func(working_string, arg, tag->param_handling_func_data);
+				}
 			
-			/* Replacing {ARG} by $arg and {CONTENT} by $string in arg & start */
-			if (blength(arg)){
-				bfindreplace(arg, parser->content_replace, working_string,0);
+				/* Replacing {ARG} by $arg and {CONTENT} by $string in arg & start */
+				if (blength(arg)){
+					bfindreplace(arg, parser->content_replace, working_string,0);
+				}
+				if (tag->speed_cache & BBCODE_CACHE_START_HAS_BRACKET_OPEN){
+					bfindreplace(parsed, parser->content_replace, working_string, 0);
+					bfindreplace(parsed, parser->arg_replace, arg, 0);
+				}
+				/* Replacing {ARG} by $arg in string & end */
+				bfindreplace(working_string, parser->arg_replace, arg,0);
+				bassign(tmp_string, tag->close_tag);
+				if (tag->speed_cache & BBCODE_CACHE_END_HAS_BRACKET_OPEN){
+					bfindreplace(tmp_string, parser->arg_replace, arg, 0);
+				}
+				/* Concat everything */
+				bconcat(parsed, working_string);
+				bconcat(parsed, tmp_string);
 			}
-			if (tag->speed_cache & BBCODE_CACHE_START_HAS_BRACKET_OPEN){
-				bfindreplace(parsed, parser->content_replace, working_string, 0);
-				bfindreplace(parsed, parser->arg_replace, arg, 0);
-			}
-			/* Replacing {ARG} by $arg in string & end */
-			bfindreplace(working_string, parser->arg_replace, arg,0);
-			bassign(tmp_string, tag->close_tag);
-			if (tag->speed_cache & BBCODE_CACHE_END_HAS_BRACKET_OPEN){
-				bfindreplace(tmp_string, parser->arg_replace, arg, 0);
-			}
-			/* Concat everything */
-			bconcat(parsed, working_string);
-			bconcat(parsed, tmp_string);
 		}
 	}
 	/* Freeing resources */
