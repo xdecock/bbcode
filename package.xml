@@ -73,6 +73,7 @@
    <file md5sum="521f60986cf3891a7ba785b9146b37fa" name="LICENSE" role="doc" />
    <file md5sum="9d9a706b737b27c0dec0b3936a46658b" name="TODO" role="doc" />
    <file md5sum="9c7034f94f0425bfcf8a22fd0c87e9d9" name="config.m4" role="src" />
+   <file md5sum="9c7034f94f0425bfcf8a22fd0c87e9d9" name="config.w32" role="src" />
    <file md5sum="6ce88398671fad85844a8b3d6c3de1f9" name="php_bbcode.h" role="src" />
    <file md5sum="6c205605d01b432b3189c50f9fc05312" name="php_bbcode.c" role="src" />
   </dir>
